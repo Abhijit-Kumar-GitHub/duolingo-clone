@@ -20,7 +20,7 @@ const SIZE_MAP = {
   sm: { face: 40, rim: 7, icon: 18 },
   md: { face: 56, rim: 10, icon: 24 },
   lg: { face: 80, rim: 14, icon: 32 },
-  xl: { face: 64, rim: 11, icon: 26 },
+  xl: { face: 58, rim: 10, icon: 24 },
 };
 
 // A real isometric "coin": two identically-sized circles, the base shifted

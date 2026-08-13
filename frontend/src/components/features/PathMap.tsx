@@ -8,8 +8,11 @@ import { GuidebookButton } from "./GuidebookButton";
 import { MascotFlourish } from "./MascotFlourish";
 import { JumpAheadBubble } from "./JumpAheadBubble";
 
-// Classic Duolingo "snake" offsets — repeats every 12 nodes.
-const ZIGZAG = [0, 48, 76, 92, 76, 48, 0, -48, -76, -92, -76, -48];
+// Classic Duolingo "snake" offsets — repeats every 8 nodes, alternating
+// left and right (measured off the real path: amplitude ~70px, swinging
+// both directions within a single unit's worth of nodes, not a one-sided
+// lean like a plain ramp-up-then-down would give).
+const ZIGZAG = [0, -48, -70, -48, 0, 48, 70, 48];
 
 const UNIT_BANNER: Record<string, string> = {
   "duo-green": "bg-duo-green",
@@ -109,7 +112,7 @@ export function PathMap({ path }: { path: PathResponse }) {
               <GuidebookButton />
             </div>
 
-            <div className="flex flex-col gap-12 items-center pb-14">
+            <div className="flex flex-col gap-6 items-center pb-14">
               {entries.map((entry, i) => {
                 const offset = ZIGZAG[globalIndex % ZIGZAG.length];
                 globalIndex += 1;

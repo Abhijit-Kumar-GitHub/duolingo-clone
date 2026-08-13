@@ -59,7 +59,7 @@ export function PathNode({
         )}
       >
         {status === "current" && (
-          <span className="absolute inset-x-0 top-0 h-16 rounded-full ring-4 ring-offset-2 ring-duo-green/30 pointer-events-none" />
+          <span className="absolute inset-x-0 top-0 h-[58px] rounded-full ring-4 ring-offset-2 ring-duo-green/30 pointer-events-none" />
         )}
 
         <GlossyBadge
@@ -67,13 +67,13 @@ export function PathNode({
           color={color}
           muted={!lit}
           icon={status === "done" ? Check : Icon}
-          iconSize={status === "done" ? 28 : 26}
+          iconSize={status === "done" ? 25 : 23}
           strokeWidth={status === "done" ? 3.5 : 2.2}
         />
 
         {!!crowns && (
-          <div className="absolute -bottom-2 -right-1 bg-duo-yellow rounded-full w-7 h-7 flex items-center justify-center border-2 border-white z-10">
-            <Crown size={14} className="text-white fill-white" />
+          <div className="absolute -bottom-1.5 -right-1 bg-duo-yellow rounded-full w-6 h-6 flex items-center justify-center border-2 border-white z-10">
+            <Crown size={12} className="text-white fill-white" />
           </div>
         )}
       </button>
@@ -85,7 +85,7 @@ export function PathNode({
       )}
 
       {label && (
-        <span className="absolute -bottom-9 left-1/2 -translate-x-1/2 text-xs font-bold text-duo-wolf whitespace-nowrap">
+        <span className="absolute -bottom-3.5 left-1/2 -translate-x-1/2 text-[10px] leading-tight font-bold text-duo-wolf whitespace-nowrap">
           {label}
         </span>
       )}
