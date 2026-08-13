@@ -97,6 +97,10 @@ export function PathMap({ path }: { path: PathResponse }) {
         // Each unit's snake curve starts fresh at offset 0 rather than
         // carrying momentum over from the previous unit's ending offset.
         let globalIndex = 0;
+        // A unit only offers a "jump ahead" checkpoint once you've actually
+        // set foot in it (at least one skill reached) — never into a fully
+        // locked future unit you haven't unlocked yet.
+        const unitUnlocked = unit.skills.some((skill) => skill.status !== "locked");
 
         return (
           <div key={unit.id} className="w-full mb-4">
@@ -121,7 +125,7 @@ export function PathMap({ path }: { path: PathResponse }) {
                     ? Trophy
                     : FILLER_ICONS[i % FILLER_ICONS.length];
 
-                const showJump = entry.status === "locked" && !jumpPlaced;
+                const showJump = unitUnlocked && entry.status === "locked" && !jumpPlaced;
                 if (showJump) jumpPlaced = true;
 
                 return (
