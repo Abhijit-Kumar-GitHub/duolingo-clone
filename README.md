@@ -3,8 +3,8 @@
 A functional clone of Duolingo's learning path, lesson loop, and gamification
 mechanics (XP, streaks, hearts, crowns, leaderboard, achievements).
 
-**Live demo:** _add your deployed URL here_
-**Repo:** _add your GitHub URL here_
+**Live demo:** <https://duolingo-clone-navy-three.vercel.app>
+**Repo:** <https://github.com/Abhijit-Kumar-GitHub/duolingo-clone>
 
 ## Tech stack
 
