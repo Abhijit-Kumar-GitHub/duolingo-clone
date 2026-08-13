@@ -4,6 +4,7 @@ Seeds a small Spanish course + a ready-to-demo learner + leaderboard rivals.
 Run standalone with `python -m app.seed`, or imported and called from
 main.py on startup if the DB is empty.
 """
+import random
 from datetime import date, timedelta
 
 from app.database import Base, SessionLocal, engine
@@ -31,117 +32,174 @@ def type_answer(prompt, answer, hint=""):
     return {"type": "TYPE_ANSWER", "prompt": prompt, "payload": {"hint": hint}, "correct_answer": answer}
 
 
+# ---- Per-topic vocab pools + fill-in-the-blank sentence bank ---------------
+# Real (small) Spanish vocab per topic, 14 pairs each — sized so a skill's
+# worst-case exercise draw (up to 8 exercises/lesson, one of which can be a
+# 3-word MATCH_PAIRS) never needs to reuse a word within the same lesson.
+# (spanish, english) tuples.
+
+VOCAB = {
+    "Greetings": [
+        ("Hola", "Hello"), ("Adiós", "Goodbye"), ("Buenos días", "Good morning"),
+        ("Buenas tardes", "Good afternoon"), ("Buenas noches", "Good night"),
+        ("Por favor", "Please"), ("Gracias", "Thank you"), ("De nada", "You're welcome"),
+        ("Lo siento", "Sorry"), ("Perdón", "Excuse me"), ("Mucho gusto", "Nice to meet you"),
+        ("Hasta luego", "See you later"), ("¿Cómo estás?", "How are you?"), ("Bienvenido", "Welcome"),
+    ],
+    "Food": [
+        ("La manzana", "Apple"), ("El agua", "Water"), ("El pan", "Bread"), ("El café", "Coffee"),
+        ("La leche", "Milk"), ("La fruta", "Fruit"), ("La carne", "Meat"), ("El queso", "Cheese"),
+        ("La ensalada", "Salad"), ("El arroz", "Rice"), ("La sopa", "Soup"), ("El pollo", "Chicken"),
+        ("El pescado", "Fish"), ("La naranja", "Orange"),
+    ],
+    "Animals": [
+        ("El perro", "Dog"), ("El gato", "Cat"), ("El pájaro", "Bird"), ("El caballo", "Horse"),
+        ("El pez", "Fish"), ("La vaca", "Cow"), ("El león", "Lion"), ("El oso", "Bear"),
+        ("El conejo", "Rabbit"), ("La oveja", "Sheep"), ("El elefante", "Elephant"),
+        ("El ratón", "Mouse"), ("La gallina", "Hen"), ("El tigre", "Tiger"),
+    ],
+    "Family": [
+        ("La madre", "Mother"), ("El padre", "Father"), ("El hermano", "Brother"),
+        ("La hermana", "Sister"), ("Los abuelos", "Grandparents"), ("La familia", "Family"),
+        ("El hijo", "Son"), ("La hija", "Daughter"), ("El tío", "Uncle"), ("La tía", "Aunt"),
+        ("El primo", "Cousin (m.)"), ("La prima", "Cousin (f.)"), ("Los padres", "Parents"),
+        ("El abuelo", "Grandfather"),
+    ],
+    "Colors": [
+        ("Rojo", "Red"), ("Azul", "Blue"), ("Verde", "Green"), ("Amarillo", "Yellow"),
+        ("Negro", "Black"), ("Blanco", "White"), ("Gris", "Gray"), ("Rosado", "Pink"),
+        ("Morado", "Purple"), ("Marrón", "Brown"), ("Naranja", "Orange"), ("Dorado", "Golden"),
+        ("Plateado", "Silver"), ("Celeste", "Sky blue"),
+    ],
+    "Travel": [
+        ("El aeropuerto", "Airport"), ("El hotel", "Hotel"), ("La maleta", "Suitcase"),
+        ("El pasaporte", "Passport"), ("El tren", "Train"), ("El boleto", "Ticket"),
+        ("El mapa", "Map"), ("La playa", "Beach"), ("El avión", "Airplane"),
+        ("La estación", "Station"), ("El taxi", "Taxi"), ("La reserva", "Reservation"),
+        ("El viaje", "Trip"), ("La ciudad", "City"),
+    ],
+}
+
+# (prompt, sentence-with-blank, answer, options) — options always include the answer.
+FILL_BLANK_BANK = {
+    "Greetings": [
+        ("Complete the greeting", "___, ¿cómo estás?", "Hola", ["Hola", "Adiós", "Gracias", "Agua"]),
+        ("Complete the sentence", "Muchas ___ por tu ayuda.", "Gracias", ["Gracias", "Por favor", "Perdón", "Hola"]),
+        ("Complete the farewell", "___, nos vemos mañana.", "Hasta luego", ["Hasta luego", "Buenos días", "Gracias", "Lo siento"]),
+    ],
+    "Food": [
+        ("Complete the sentence", "Quiero un vaso de ___.", "agua", ["agua", "pan", "leche", "carne"]),
+        ("Complete the sentence", "Como ___ con mantequilla.", "pan", ["pan", "queso", "arroz", "sopa"]),
+        ("Complete the sentence", "Me gusta el ___ con leche.", "café", ["café", "agua", "pescado", "pollo"]),
+    ],
+    "Animals": [
+        ("Complete the sentence", "El ___ nada en el agua.", "pez", ["pez", "perro", "pájaro", "caballo"]),
+        ("Complete the sentence", "El ___ vive en la granja.", "caballo", ["caballo", "gato", "león", "oso"]),
+        ("Complete the sentence", "El ___ es el rey de la selva.", "león", ["león", "conejo", "ratón", "oveja"]),
+    ],
+    "Family": [
+        ("Complete the sentence", "Ella es mi ___.", "hermana", ["hermana", "hermano", "perro", "gato"]),
+        ("Complete the sentence", "Mi ___ tiene ochenta años.", "abuelo", ["abuelo", "primo", "hijo", "tío"]),
+        ("Complete the sentence", "Toda mi ___ viene a cenar.", "familia", ["familia", "hija", "tía", "prima"]),
+    ],
+    "Colors": [
+        ("Complete the sentence", "El cielo es ___.", "azul", ["azul", "rojo", "negro", "verde"]),
+        ("Complete the sentence", "La sangre es de color ___.", "rojo", ["rojo", "amarillo", "blanco", "gris"]),
+        ("Complete the sentence", "La nieve es ___.", "blanco", ["blanco", "negro", "marrón", "morado"]),
+    ],
+    "Travel": [
+        ("Complete the sentence", "Necesito mi ___ para viajar.", "pasaporte", ["pasaporte", "libro", "perro", "café"]),
+        ("Complete the sentence", "Compramos el ___ para el tren.", "boleto", ["boleto", "mapa", "taxi", "hotel"]),
+        ("Complete the sentence", "Vamos a la ___ para nadar.", "playa", ["playa", "estación", "maleta", "ciudad"]),
+    ],
+}
+
+EXERCISE_TYPES = ["mc", "translate", "type_answer", "fill_blank", "match"]
+
+
+def _build_exercise(etype, vocab, sentences, used_in_lesson, rng):
+    if etype == "mc":
+        candidates = [v for v in vocab if v[0] not in used_in_lesson] or vocab
+        es, en = rng.choice(candidates)
+        used_in_lesson.add(es)
+        distractor_pool = [v[1] for v in vocab if v[1] != en]
+        options = rng.sample(distractor_pool, min(3, len(distractor_pool))) + [en]
+        rng.shuffle(options)
+        return mc(f"'{es}' means?", options, en)
+
+    if etype == "translate":
+        candidates = [v for v in vocab if v[0] not in used_in_lesson] or vocab
+        es, en = rng.choice(candidates)
+        used_in_lesson.add(es)
+        words = es.split(" ")
+        distractor_pool = [w for v in vocab if v[0] != es for w in v[0].split(" ") if w not in words]
+        word_bank = words + rng.sample(distractor_pool, min(2, len(distractor_pool)))
+        rng.shuffle(word_bank)
+        return translate(f"Translate: '{en}'", word_bank, es)
+
+    if etype == "type_answer":
+        candidates = [v for v in vocab if v[0] not in used_in_lesson] or vocab
+        es, en = rng.choice(candidates)
+        used_in_lesson.add(es)
+        return type_answer(f"Type the Spanish word for '{en}'", es, hint=en)
+
+    if etype == "fill_blank":
+        prompt, sentence, answer, options = rng.choice(sentences)
+        return fill_blank(prompt, sentence, options, answer)
+
+    # match — needs 3 distinct pairs
+    candidates = [v for v in vocab if v[0] not in used_in_lesson]
+    if len(candidates) < 3:
+        candidates = vocab
+    chosen = rng.sample(candidates, 3)
+    for es, _ in chosen:
+        used_in_lesson.add(es)
+    return match("Match the words to their meanings", dict(chosen))
+
+
+def build_lessons(topic, rng, lesson_count=None):
+    """Generates lesson_count (default: random 3-5) lessons for a topic, each
+    with a random 4-8 exercises of varied type, drawn from that topic's real
+    vocab pool — matching real Duolingo's per-skill lesson/exercise counts
+    rather than this app's earlier fixed 2-lessons-of-4 shape."""
+    vocab = VOCAB[topic]
+    sentences = FILL_BLANK_BANK[topic]
+    lesson_count = lesson_count if lesson_count is not None else rng.randint(3, 5)
+
+    lessons = []
+    for _ in range(lesson_count):
+        exercise_count = rng.randint(4, 8)
+        type_sequence = []
+        while len(type_sequence) < exercise_count:
+            batch = EXERCISE_TYPES[:]
+            rng.shuffle(batch)
+            type_sequence.extend(batch)
+        type_sequence = type_sequence[:exercise_count]
+
+        used_in_lesson = set()
+        lessons.append([_build_exercise(t, vocab, sentences, used_in_lesson, rng) for t in type_sequence])
+    return lessons
+
+
+# Fixed seed so `rm duolingo.db && python -m app.seed` reproduces identical
+# content every time (stable for demoing/grading, not reshuffled per run).
+_rng = random.Random(20240613)
+
 UNITS = [
     {
         "title": "Unit 1: Basics", "description": "Greetings, food, and animals", "color_theme": "duo-green",
         "skills": [
-            {
-                "title": "Greetings", "icon": "hand-wave",
-                "lessons": [
-                    [
-                        mc("What does 'Hola' mean?", ["Hello", "Goodbye", "Please", "Thanks"], "Hello"),
-                        translate("Translate: 'Good morning'", ["Buenos", "días", "Buenas", "noches", "Hola"], "Buenos días"),
-                        type_answer("Type the Spanish word for 'Goodbye'", "Adiós"),
-                        fill_blank("Complete the greeting", "___, ¿cómo estás?", ["Hola", "Adiós", "Gracias", "Agua"], "Hola"),
-                    ],
-                    [
-                        match("Match the words to their meanings", {"Gracias": "Thank you", "Por favor": "Please", "Lo siento": "Sorry"}),
-                        mc("'Buenas noches' means?", ["Good night", "Good morning", "See you later", "Excuse me"], "Good night"),
-                        translate("Translate: 'Nice to meet you'", ["Mucho", "gusto", "Buenas", "tardes", "Hasta"], "Mucho gusto"),
-                        type_answer("Type the Spanish word for 'Please'", "Por favor"),
-                    ],
-                ],
-            },
-            {
-                "title": "Food", "icon": "utensils",
-                "lessons": [
-                    [
-                        mc("'La manzana' means?", ["Apple", "Bread", "Water", "Milk"], "Apple"),
-                        translate("Translate: 'the water'", ["el", "agua", "la", "leche", "pan"], "el agua"),
-                        type_answer("Type the Spanish word for 'bread'", "pan"),
-                        fill_blank("Complete the sentence", "Quiero ___ de agua.", ["un vaso", "un pan", "una silla", "un libro"], "un vaso"),
-                    ],
-                    [
-                        match("Match the food words", {"El café": "Coffee", "La leche": "Milk", "El pan": "Bread"}),
-                        mc("'La fruta' means?", ["Fruit", "Vegetable", "Meat", "Cheese"], "Fruit"),
-                        translate("Translate: 'I like coffee'", ["Me", "gusta", "el", "café", "la"], "Me gusta el café"),
-                        type_answer("Type the Spanish word for 'apple'", "manzana"),
-                    ],
-                ],
-            },
-            {
-                "title": "Animals", "icon": "paw",
-                "lessons": [
-                    [
-                        mc("'El perro' means?", ["Dog", "Cat", "Bird", "Fish"], "Dog"),
-                        translate("Translate: 'the cat'", ["el", "gato", "la", "gata", "pez"], "el gato"),
-                        type_answer("Type the Spanish word for 'bird'", "pájaro"),
-                        fill_blank("Complete the sentence", "El ___ nada en el agua.", ["pez", "perro", "pájaro", "caballo"], "pez"),
-                    ],
-                    [
-                        match("Match the animals", {"El caballo": "Horse", "El pájaro": "Bird", "El pez": "Fish"}),
-                        mc("'La gata' means?", ["The cat (f.)", "The dog (f.)", "The horse", "The fish"], "The cat (f.)"),
-                        translate("Translate: 'the horse'", ["el", "caballo", "la", "vaca", "gato"], "el caballo"),
-                        type_answer("Type the Spanish word for 'dog'", "perro"),
-                    ],
-                ],
-            },
+            {"title": "Greetings", "icon": "hand-wave", "lessons": build_lessons("Greetings", _rng)},
+            {"title": "Food", "icon": "utensils", "lessons": build_lessons("Food", _rng)},
+            {"title": "Animals", "icon": "paw", "lessons": build_lessons("Animals", _rng)},
         ],
     },
     {
         "title": "Unit 2: Everyday Life", "description": "Family, colors, and travel", "color_theme": "duo-blue",
         "skills": [
-            {
-                "title": "Family", "icon": "home-heart",
-                "lessons": [
-                    [
-                        mc("'La madre' means?", ["Mother", "Father", "Sister", "Brother"], "Mother"),
-                        translate("Translate: 'my brother'", ["mi", "hermano", "mis", "hermana", "el"], "mi hermano"),
-                        type_answer("Type the Spanish word for 'father'", "padre"),
-                        fill_blank("Complete the sentence", "Ella es mi ___.", ["hermana", "hermano", "perro", "gato"], "hermana"),
-                    ],
-                    [
-                        match("Match the family words", {"Los abuelos": "Grandparents", "El padre": "Father", "La hermana": "Sister"}),
-                        mc("'Los abuelos' means?", ["Grandparents", "Parents", "Cousins", "Uncles"], "Grandparents"),
-                        translate("Translate: 'my family'", ["mi", "familia", "mis", "amigos", "la"], "mi familia"),
-                        type_answer("Type the Spanish word for 'mother'", "madre"),
-                    ],
-                ],
-            },
-            {
-                "title": "Colors", "icon": "palette",
-                "lessons": [
-                    [
-                        mc("'Rojo' means?", ["Red", "Blue", "Green", "Yellow"], "Red"),
-                        translate("Translate: 'the blue car'", ["el", "carro", "azul", "la", "casa"], "el carro azul"),
-                        type_answer("Type the Spanish word for 'green'", "verde"),
-                        fill_blank("Complete the sentence", "El cielo es ___.", ["azul", "rojo", "negro", "verde"], "azul"),
-                    ],
-                    [
-                        match("Match the colors", {"Amarillo": "Yellow", "Negro": "Black", "Verde": "Green"}),
-                        mc("'Negro' means?", ["Black", "White", "Gray", "Brown"], "Black"),
-                        translate("Translate: 'a yellow bird'", ["un", "pájaro", "amarillo", "una", "flor"], "un pájaro amarillo"),
-                        type_answer("Type the Spanish word for 'red'", "rojo"),
-                    ],
-                ],
-            },
-            {
-                "title": "Travel", "icon": "plane",
-                "lessons": [
-                    [
-                        mc("'El aeropuerto' means?", ["Airport", "Hotel", "Train station", "Beach"], "Airport"),
-                        translate("Translate: 'the hotel'", ["el", "hotel", "la", "casa", "tren"], "el hotel"),
-                        type_answer("Type the Spanish word for 'suitcase'", "maleta"),
-                        fill_blank("Complete the sentence", "Necesito mi ___ para viajar.", ["pasaporte", "libro", "perro", "café"], "pasaporte"),
-                    ],
-                    [
-                        match("Match the travel words", {"El tren": "Train", "La maleta": "Suitcase", "El pasaporte": "Passport"}),
-                        mc("'El tren' means?", ["Train", "Plane", "Bus", "Car"], "Train"),
-                        translate("Translate: 'I need a passport'", ["Necesito", "un", "pasaporte", "una", "maleta"], "Necesito un pasaporte"),
-                        type_answer("Type the Spanish word for 'airport'", "aeropuerto"),
-                    ],
-                ],
-            },
+            {"title": "Family", "icon": "home-heart", "lessons": build_lessons("Family", _rng)},
+            {"title": "Colors", "icon": "palette", "lessons": build_lessons("Colors", _rng)},
+            {"title": "Travel", "icon": "plane", "lessons": build_lessons("Travel", _rng)},
         ],
     },
 ]
@@ -244,7 +302,14 @@ def seed():
             db.add(models.DailyActivity(user_id=rival.id, activity_date=date.today() - timedelta(days=1), xp_earned=weekly_xp))
 
         db.commit()
-        print("Seed complete: 2 units, 6 skills, 12 lessons, 48 exercises, 6 achievements, 7 users.")
+        n_units = len(UNITS)
+        n_skills = sum(len(u["skills"]) for u in UNITS)
+        n_lessons = sum(len(s["lessons"]) for u in UNITS for s in u["skills"])
+        n_exercises = sum(len(l) for u in UNITS for s in u["skills"] for l in s["lessons"])
+        print(
+            f"Seed complete: {n_units} units, {n_skills} skills, {n_lessons} lessons, "
+            f"{n_exercises} exercises, {len(ACHIEVEMENTS)} achievements, {1 + len(RIVAL_USERS)} users."
+        )
     finally:
         db.close()
 

@@ -185,23 +185,29 @@ def complete_lesson(
             progress.crowns += 1
             progress.lessons_completed = 0  # reset the ring for the next crown level
 
-    # 5) unlock the next skill in order, if this was the first completion
+    # 5) unlock the next skill in order — only once *this* skill is fully
+    # done (all its lessons), never on an earlier lesson within it. Doing
+    # this unconditionally on every completion was the bug behind two
+    # skills showing as "current" (with two overlapping Start bubbles) at
+    # once: the very first lesson of a multi-lesson skill was unlocking the
+    # next skill immediately, before the current one was actually finished.
     next_unlocked_title = None
-    skill = db.get(models.Skill, lesson.skill_id)
-    next_skill = (
-        db.query(models.Skill)
-        .filter(models.Skill.unit_id == skill.unit_id, models.Skill.order_index == skill.order_index + 1)
-        .first()
-    )
-    if next_skill is None:
-        next_unit = db.query(models.Unit).filter(models.Unit.order_index == db.get(models.Unit, skill.unit_id).order_index + 1).first()
-        if next_unit:
-            next_skill = db.query(models.Skill).filter_by(unit_id=next_unit.id).order_by(models.Skill.order_index).first()
-    if next_skill:
-        next_progress = get_or_create_progress(db, user.id, next_skill.id)
-        if next_progress.status == "locked":
-            next_progress.status = "available"
-            next_unlocked_title = next_skill.title
+    if progress.status == "completed":
+        skill = db.get(models.Skill, lesson.skill_id)
+        next_skill = (
+            db.query(models.Skill)
+            .filter(models.Skill.unit_id == skill.unit_id, models.Skill.order_index == skill.order_index + 1)
+            .first()
+        )
+        if next_skill is None:
+            next_unit = db.query(models.Unit).filter(models.Unit.order_index == db.get(models.Unit, skill.unit_id).order_index + 1).first()
+            if next_unit:
+                next_skill = db.query(models.Skill).filter_by(unit_id=next_unit.id).order_by(models.Skill.order_index).first()
+        if next_skill:
+            next_progress = get_or_create_progress(db, user.id, next_skill.id)
+            if next_progress.status == "locked":
+                next_progress.status = "available"
+                next_unlocked_title = next_skill.title
 
     db.commit()
     db.refresh(user)
