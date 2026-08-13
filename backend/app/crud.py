@@ -173,12 +173,17 @@ def complete_lesson(
 
     # 4) skill progress + crowns
     progress = get_or_create_progress(db, user.id, lesson.skill_id)
-    progress.status = "completed" if progress.status != "completed" else progress.status
     progress.lessons_completed += 1
     total_lessons_in_skill = db.query(models.Lesson).filter_by(skill_id=lesson.skill_id).count()
-    if progress.lessons_completed >= total_lessons_in_skill and progress.crowns < 5:
-        progress.crowns += 1
-        progress.lessons_completed = 0  # reset the ring for the next crown level
+    # Only the lesson that actually finishes the skill's full lesson list
+    # earns a crown / flips status to "completed" — earlier lessons in a
+    # multi-lesson skill must leave status as "available" so the path still
+    # shows an accurate mix of done/current/upcoming nodes for it.
+    if progress.lessons_completed >= total_lessons_in_skill:
+        progress.status = "completed"
+        if progress.crowns < 5:
+            progress.crowns += 1
+            progress.lessons_completed = 0  # reset the ring for the next crown level
 
     # 5) unlock the next skill in order, if this was the first completion
     next_unlocked_title = None

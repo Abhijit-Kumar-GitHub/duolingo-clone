@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { PathResponse } from "@/lib/api";
 import { PathNode, NodeStatus } from "./PathNode";
 import { GuidebookButton } from "./GuidebookButton";
-import { JumpAheadBubble } from "./JumpAheadBubble";
 
 // Classic Duolingo "snake" offsets — repeats every 8 nodes, alternating
 // left and right (measured off the real path: amplitude ~70px, swinging
@@ -41,7 +40,7 @@ export function PathMap({ path }: { path: PathResponse }) {
   // we render anything.
   type Entry = {
     skillId: number; unitId: number; colorTheme: string; label?: string;
-    status: NodeStatus; topicIcon: any; clickable: boolean;
+    status: NodeStatus; topicIcon: any; clickable: boolean; progressPct: number;
   };
 
   const unitEntries: Entry[][] = path.units.map((unit) => {
@@ -54,6 +53,12 @@ export function PathMap({ path }: { path: PathResponse }) {
       // the last node (fully done or fully locked skills have no "current").
       const currentIndex = skill.status === "available" ? Math.min(skill.lessons_completed, total - 1) : -1;
       const labelIndex = currentIndex >= 0 ? currentIndex : total - 1;
+      // How much of this skill is already banked — drawn as a partial ring
+      // on whichever lesson turns out to be "current" below. There's no
+      // exercise-level progress persisted mid-lesson (lessons are atomic —
+      // see LessonPlayer), so this is skill-granularity, not exercise-
+      // granularity, but it's real data rather than a fake animation.
+      const progressPct = skill.status === "available" ? skill.lessons_completed / total : 0;
 
       for (let i = 0; i < total; i++) {
         let status: NodeStatus;
@@ -82,13 +87,12 @@ export function PathMap({ path }: { path: PathResponse }) {
           status,
           topicIcon: TopicIcon,
           clickable,
+          progressPct,
         });
       }
     });
     return entries;
   });
-
-  let jumpPlaced = false;
 
   return (
     <div className="flex flex-col items-center pb-24 max-w-md mx-auto">
@@ -97,16 +101,22 @@ export function PathMap({ path }: { path: PathResponse }) {
         // Each unit's snake curve starts fresh at offset 0 rather than
         // carrying momentum over from the previous unit's ending offset.
         let globalIndex = 0;
-        // A unit only offers a "jump ahead" checkpoint once you've actually
-        // set foot in it (at least one skill reached) — never into a fully
-        // locked future unit you haven't unlocked yet.
-        const unitUnlocked = unit.skills.some((skill) => skill.status !== "locked");
+        // A not-yet-started unit (no skill reached at all) gets a single
+        // "Jump here?" checkpoint above its very first node — matching real
+        // Duolingo's placement (top of the unit, not beside a random locked
+        // node partway through a unit you're already in).
+        const unitNotStarted = unit.skills.every((skill) => skill.status === "locked");
 
         return (
           <div key={unit.id} className="w-full mb-4">
             <div className={`${UNIT_BANNER[unit.color_theme] ?? "bg-duo-green"} rounded-2xl px-5 py-4 mb-10 text-white shadow-duo-card flex items-center justify-between gap-3`}>
               <div>
-                <p className="text-xs font-bold uppercase opacity-90">{unit.title}</p>
+                <button
+                  onClick={() => router.push("/sections")}
+                  className="text-xs font-bold uppercase opacity-90 hover:opacity-100 hover:underline underline-offset-2"
+                >
+                  Section 1, Unit {unitIdx + 1}
+                </button>
                 <p className="font-extrabold text-lg">{unit.description}</p>
               </div>
               <GuidebookButton />
@@ -119,18 +129,15 @@ export function PathMap({ path }: { path: PathResponse }) {
 
                 const isUnitLast = i === entries.length - 1;
                 const showFillerAsTrophy = isUnitLast && entry.status !== "done" && entry.status !== "current";
+                const jumpTarget = unitNotStarted && i === 0;
                 const Icon = entry.status === "current"
                   ? entry.topicIcon
                   : showFillerAsTrophy
                     ? Trophy
                     : FILLER_ICONS[i % FILLER_ICONS.length];
 
-                const showJump = unitUnlocked && entry.status === "locked" && !jumpPlaced;
-                if (showJump) jumpPlaced = true;
-
                 return (
                   <div key={`${entry.skillId}-${i}`} className="relative">
-                    {showJump && <JumpAheadBubble />}
                     <PathNode
                       status={entry.status}
                       icon={Icon}
@@ -139,6 +146,9 @@ export function PathMap({ path }: { path: PathResponse }) {
                       clickable={entry.clickable}
                       onClick={() => router.push(`/lesson/${entry.skillId}`)}
                       label={entry.label}
+                      showJump={jumpTarget}
+                      jumpTarget={jumpTarget}
+                      progressPct={entry.progressPct}
                     />
                   </div>
                 );
