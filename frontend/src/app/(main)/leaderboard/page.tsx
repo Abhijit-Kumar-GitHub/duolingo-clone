@@ -4,18 +4,40 @@ import { useEffect, useState } from "react";
 import { api, LeaderboardEntry } from "@/lib/api";
 import { Trophy } from "lucide-react";
 import clsx from "clsx";
+import { RightRail } from "@/components/features/rail/RightRail";
+import { DailyQuestsWidget } from "@/components/features/rail/DailyQuestsWidget";
 
 const MEDAL_COLOR = ["text-duo-yellow", "text-duo-hare", "text-duo-fox"];
+
+// Static tier ladder — real promotion/demotion between leagues would need a
+// weekly-rollover job, out of scope; the seeded user is always "in" Bronze.
+const LEAGUES = ["Bronze", "Silver", "Gold", "Sapphire", "Ruby"];
 
 export default function LeaderboardPage() {
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
 
   useEffect(() => {
-    api.getLeaderboard().then(setEntries);
+    api.getLeaderboard().then(setEntries).catch((err) => console.error("Failed to load leaderboard", err));
   }, []);
 
   return (
-    <div className="max-w-lg mx-auto pt-6 pb-16">
+    <div className="flex gap-10 max-w-4xl mx-auto pt-6 pb-16">
+      <div className="flex-1 min-w-0 max-w-lg">
+      <div className="flex items-center justify-center gap-3 mb-6">
+        {LEAGUES.map((league) => (
+          <div
+            key={league}
+            title={league}
+            className={clsx(
+              "w-10 h-10 rounded-full flex items-center justify-center border-2",
+              league === "Bronze" ? "bg-duo-fox/15 border-duo-fox" : "bg-duo-swan/60 border-transparent opacity-60"
+            )}
+          >
+            <Trophy size={18} className={league === "Bronze" ? "text-duo-fox" : "text-duo-hare"} />
+          </div>
+        ))}
+      </div>
+
       <div className="flex flex-col items-center text-center mb-6">
         <div className="bg-duo-yellow/15 rounded-full p-4 mb-3">
           <Trophy className="text-duo-yellow" size={40} />
@@ -45,6 +67,10 @@ export default function LeaderboardPage() {
           </div>
         ))}
       </div>
+      </div>
+      <RightRail>
+        <DailyQuestsWidget />
+      </RightRail>
     </div>
   );
 }

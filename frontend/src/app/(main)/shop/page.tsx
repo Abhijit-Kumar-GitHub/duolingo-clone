@@ -1,44 +1,76 @@
 "use client";
 
-import { Gem, Heart, Snowflake, Shirt } from "lucide-react";
+import { Gem, Heart, Infinity as InfinityIcon, Snowflake, Shirt } from "lucide-react";
 import { useUserStore } from "@/store/useUserStore";
+import { SuperBanner } from "@/components/features/rail/SuperBanner";
+import { RightRail } from "@/components/features/rail/RightRail";
+import { LeagueWidget } from "@/components/features/rail/LeagueWidget";
+import { DailyQuestsWidget } from "@/components/features/rail/DailyQuestsWidget";
 
-const ITEMS = [
-  { icon: Heart, name: "Refill hearts", cost: 350, color: "text-duo-red", bg: "bg-duo-red/10" },
-  { icon: Snowflake, name: "Streak freeze", cost: 200, color: "text-duo-blue", bg: "bg-duo-blue/10" },
-  { icon: Shirt, name: "Mascot outfit", cost: 500, color: "text-duo-purple", bg: "bg-duo-purple/10" },
+const HEARTS_ITEMS = [
+  { icon: Heart, name: "Refill Hearts", description: "Get full hearts so you can worry less about making mistakes in a lesson.", price: "350", color: "text-duo-red", bg: "bg-duo-red/10" },
+  { icon: InfinityIcon, name: "Unlimited Hearts", description: "Never run out of hearts with Super!", price: "Free trial", color: "text-duo-blue", bg: "bg-duo-blue/10" },
 ];
+
+const POWER_UP_ITEMS = [
+  { icon: Snowflake, name: "Streak Freeze", description: "Streak Freeze allows your streak to remain in place for one full day of inactivity.", price: "200", color: "text-duo-blue", bg: "bg-duo-blue/10" },
+  { icon: Shirt, name: "Mascot Outfit", description: "Dress up your mascot with a fresh look.", price: "500", color: "text-duo-purple", bg: "bg-duo-purple/10" },
+];
+
+function ShopRow({ icon: Icon, name, description, price, color, bg }: {
+  icon: any; name: string; description: string; price: string; color: string; bg: string;
+}) {
+  return (
+    <div className="flex items-center gap-4 py-3 opacity-75">
+      <div className={`${bg} rounded-2xl p-2.5 shrink-0`}>
+        <Icon className={color} size={22} />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="font-bold text-sm text-duo-eel">{name}</p>
+        <p className="text-xs text-duo-wolf leading-snug">{description}</p>
+      </div>
+      <span className="shrink-0 border-2 border-duo-swan rounded-xl px-3 py-1.5 text-xs font-extrabold uppercase tracking-wide text-duo-wolf whitespace-nowrap">
+        {price === "Free trial" ? price : (
+          <span className="flex items-center gap-1">
+            Get for <Gem size={11} className="fill-duo-blue text-duo-blue" /> {price}
+          </span>
+        )}
+      </span>
+    </div>
+  );
+}
 
 export default function ShopPage() {
   const gems = useUserStore((s) => s.user?.gems ?? 0);
 
   return (
-    <div className="max-w-lg mx-auto pt-8 pb-16">
-      <div className="flex flex-col items-center text-center mb-8">
-        <div className="bg-duo-blue/10 rounded-full p-4 mb-3">
-          <Gem className="text-duo-blue fill-duo-blue" size={36} />
+    <div className="flex gap-10 max-w-4xl mx-auto pt-6 pb-16">
+      <div className="flex-1 min-w-0 max-w-lg">
+        <SuperBanner />
+
+        <div className="flex items-center gap-2 justify-center mb-6 -mt-2">
+          <Gem className="text-duo-blue fill-duo-blue" size={20} />
+          <span className="font-extrabold text-duo-eel">{gems} gems</span>
         </div>
-        <h1 className="text-2xl font-extrabold text-duo-eel">{gems} gems</h1>
-        <p className="text-duo-wolf text-sm">Spend gems on hearts, streak protection, and more.</p>
-      </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {ITEMS.map(({ icon: Icon, name, cost, color, bg }) => (
-          <div key={name} className="border border-duo-swan rounded-2xl p-4 flex flex-col items-center gap-2 text-center opacity-60">
-            <div className={`${bg} rounded-full p-3`}>
-              <Icon className={color} size={26} />
-            </div>
-            <p className="font-bold text-sm text-duo-eel">{name}</p>
-            <span className="flex items-center gap-1 text-xs font-extrabold text-duo-blue">
-              <Gem size={12} className="fill-duo-blue" /> {cost}
-            </span>
-          </div>
-        ))}
-      </div>
+        <h2 className="font-extrabold text-duo-eel text-lg mb-1">Hearts</h2>
+        <div className="divide-y divide-duo-swan mb-6">
+          {HEARTS_ITEMS.map((item) => <ShopRow key={item.name} {...item} />)}
+        </div>
 
-      <p className="text-center text-xs font-extrabold uppercase tracking-wide text-duo-blue bg-duo-blue/10 px-3 py-1.5 rounded-full mt-8 mx-auto w-fit">
-        Purchases coming soon — hearts already refill from the heart popover
-      </p>
+        <h2 className="font-extrabold text-duo-eel text-lg mb-1">Power-Ups</h2>
+        <div className="divide-y divide-duo-swan">
+          {POWER_UP_ITEMS.map((item) => <ShopRow key={item.name} {...item} />)}
+        </div>
+
+        <p className="text-center text-xs font-extrabold uppercase tracking-wide text-duo-blue bg-duo-blue/10 px-3 py-1.5 rounded-full mt-8 mx-auto w-fit">
+          Purchases coming soon — hearts already refill from the heart popover
+        </p>
+      </div>
+      <RightRail>
+        <LeagueWidget />
+        <DailyQuestsWidget />
+      </RightRail>
     </div>
   );
 }

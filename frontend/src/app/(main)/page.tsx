@@ -3,6 +3,10 @@
 import { useEffect, useState } from "react";
 import { api, PathResponse } from "@/lib/api";
 import { PathMap } from "@/components/features/PathMap";
+import { RightRail } from "@/components/features/rail/RightRail";
+import { SuperCard } from "@/components/features/rail/SuperCard";
+import { LeagueWidget } from "@/components/features/rail/LeagueWidget";
+import { DailyQuestsWidget } from "@/components/features/rail/DailyQuestsWidget";
 
 export default function HomePage() {
   const [path, setPath] = useState<PathResponse | null>(null);
@@ -16,8 +20,15 @@ export default function HomePage() {
   }
 
   return (
-    <div className="pt-4">
-      <PathMap path={path} />
+    <div className="flex gap-10 max-w-4xl mx-auto pt-4">
+      <div className="flex-1 min-w-0">
+        <PathMap path={path} />
+      </div>
+      <RightRail>
+        <SuperCard />
+        <LeagueWidget />
+        <DailyQuestsWidget />
+      </RightRail>
     </div>
   );
 }
