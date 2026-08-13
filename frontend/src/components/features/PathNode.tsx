@@ -1,8 +1,7 @@
 "use client";
 
-import { Check, Crown } from "lucide-react";
+import { Check } from "lucide-react";
 import clsx from "clsx";
-import { useState } from "react";
 import { GlossyBadge, GlossyColor } from "./GlossyBadge";
 
 export type NodeStatus = "done" | "current" | "upcoming" | "locked";
@@ -21,7 +20,7 @@ const COLOR_MAP: Record<string, GlossyColor> = {
 // single "current" node per skill is clickable, plus "done" nodes (tapping
 // a finished skill replays it, same as real Duolingo).
 export function PathNode({
-  status, icon: Icon, colorTheme, offset, clickable, onClick, label, crowns,
+  status, icon: Icon, colorTheme, offset, clickable, onClick, label,
 }: {
   status: NodeStatus;
   icon: any;
@@ -30,9 +29,7 @@ export function PathNode({
   clickable: boolean;
   onClick?: () => void;
   label?: string;
-  crowns?: number;
 }) {
-  const [showTooltip, setShowTooltip] = useState(false);
   const color = COLOR_MAP[colorTheme] ?? "green";
   const lit = status === "done" || status === "current";
 
@@ -47,19 +44,16 @@ export function PathNode({
 
       <button
         onClick={clickable ? onClick : undefined}
-        onMouseEnter={() => setShowTooltip(true)}
-        onMouseLeave={() => setShowTooltip(false)}
         disabled={!clickable}
         aria-label={label}
         className={clsx(
           "relative transition-transform",
           clickable && "active:translate-y-1",
-          !clickable && "cursor-not-allowed",
           status === "current" && "animate-pop-in"
         )}
       >
         {status === "current" && (
-          <span className="absolute inset-x-0 top-0 h-[58px] rounded-full ring-4 ring-offset-2 ring-duo-green/30 pointer-events-none" />
+          <span className="absolute inset-x-0 top-0 h-[42px] ring-4 ring-offset-2 ring-duo-green/30 pointer-events-none" style={{ borderRadius: "50%" }} />
         )}
 
         <GlossyBadge
@@ -69,26 +63,9 @@ export function PathNode({
           icon={status === "done" ? Check : Icon}
           iconSize={status === "done" ? 25 : 23}
           strokeWidth={status === "done" ? 3.5 : 2.2}
+          pressable={clickable}
         />
-
-        {!!crowns && (
-          <div className="absolute -bottom-1.5 -right-1 bg-duo-yellow rounded-full w-6 h-6 flex items-center justify-center border-2 border-white z-10">
-            <Crown size={12} className="text-white fill-white" />
-          </div>
-        )}
       </button>
-
-      {showTooltip && status !== "current" && label && (
-        <div className="absolute -top-9 left-1/2 -translate-x-1/2 bg-duo-eel text-white text-xs font-bold px-3 py-1.5 rounded-lg whitespace-nowrap z-10">
-          {status === "locked" ? "Complete the previous skill to unlock" : label}
-        </div>
-      )}
-
-      {label && (
-        <span className="absolute -bottom-3.5 left-1/2 -translate-x-1/2 text-[10px] leading-tight font-bold text-duo-wolf whitespace-nowrap">
-          {label}
-        </span>
-      )}
     </div>
   );
 }

@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { PathResponse } from "@/lib/api";
 import { PathNode, NodeStatus } from "./PathNode";
 import { GuidebookButton } from "./GuidebookButton";
-import { MascotFlourish } from "./MascotFlourish";
 import { JumpAheadBubble } from "./JumpAheadBubble";
 
 // Classic Duolingo "snake" offsets — repeats every 8 nodes, alternating
@@ -41,7 +40,7 @@ export function PathMap({ path }: { path: PathResponse }) {
   // so we know which node is the very last in each unit (→ trophy) before
   // we render anything.
   type Entry = {
-    skillId: number; unitId: number; colorTheme: string; label?: string; crowns?: number;
+    skillId: number; unitId: number; colorTheme: string; label?: string;
     status: NodeStatus; topicIcon: any; clickable: boolean;
   };
 
@@ -57,7 +56,6 @@ export function PathMap({ path }: { path: PathResponse }) {
       const labelIndex = currentIndex >= 0 ? currentIndex : total - 1;
 
       for (let i = 0; i < total; i++) {
-        const isLast = i === total - 1;
         let status: NodeStatus;
         let clickable: boolean;
         if (skill.status === "completed") {
@@ -81,7 +79,6 @@ export function PathMap({ path }: { path: PathResponse }) {
           unitId: unit.id,
           colorTheme: unit.color_theme,
           label: i === labelIndex ? skill.title : undefined,
-          crowns: isLast ? skill.crowns : undefined,
           status,
           topicIcon: TopicIcon,
           clickable,
@@ -91,7 +88,6 @@ export function PathMap({ path }: { path: PathResponse }) {
     return entries;
   });
 
-  let mascotPlaced = false;
   let jumpPlaced = false;
 
   return (
@@ -125,14 +121,11 @@ export function PathMap({ path }: { path: PathResponse }) {
                     ? Trophy
                     : FILLER_ICONS[i % FILLER_ICONS.length];
 
-                const showMascot = entry.status === "current" && !mascotPlaced;
-                if (showMascot) mascotPlaced = true;
                 const showJump = entry.status === "locked" && !jumpPlaced;
                 if (showJump) jumpPlaced = true;
 
                 return (
                   <div key={`${entry.skillId}-${i}`} className="relative">
-                    {showMascot && <MascotFlourish />}
                     {showJump && <JumpAheadBubble />}
                     <PathNode
                       status={entry.status}
@@ -142,7 +135,6 @@ export function PathMap({ path }: { path: PathResponse }) {
                       clickable={entry.clickable}
                       onClick={() => router.push(`/lesson/${entry.skillId}`)}
                       label={entry.label}
-                      crowns={entry.crowns}
                     />
                   </div>
                 );

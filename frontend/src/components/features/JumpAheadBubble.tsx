@@ -11,7 +11,7 @@ export function JumpAheadBubble() {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="absolute -left-32 top-5 z-10">
+    <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 z-10">
       <button
         onClick={() => setOpen((o) => !o)}
         onBlur={() => setOpen(false)}
