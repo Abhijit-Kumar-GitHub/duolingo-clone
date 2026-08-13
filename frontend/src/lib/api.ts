@@ -28,6 +28,7 @@ export interface User {
   id: number; username: string; display_name: string; avatar_emoji: string;
   streak: number; longest_streak: number; total_xp: number;
   hearts: number; max_hearts: number; gems: number; daily_xp_goal: number;
+  xp_today: number;
   last_active_date: string | null;
 }
 
@@ -72,11 +73,14 @@ export interface Achievement {
 
 export interface Profile { user: User; skills_completed: number; lessons_completed: number; achievements: Achievement[]; }
 
+export interface DayActivity { day_label: string; date: string; active: boolean; is_today: boolean; }
+
 // ---- API surface ----
 
 export const api = {
   getUser: () => request<User>("/api/user/me"),
   simulateDay: () => request<User>("/api/user/simulate-day", { method: "POST" }),
+  getWeeklyActivity: () => request<DayActivity[]>("/api/user/weekly-activity"),
   getPath: () => request<PathResponse>("/api/path"),
   getLesson: (skillId: number) => request<LessonResponse>(`/api/lesson/${skillId}`),
   checkAnswer: (exerciseId: number, answer: string) =>

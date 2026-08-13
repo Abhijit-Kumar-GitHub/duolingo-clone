@@ -23,7 +23,7 @@ export function PathMap({ path }: { path: PathResponse }) {
             <p className="font-extrabold text-lg">{unit.description}</p>
           </div>
 
-          <div className="flex flex-col gap-9 items-center">
+          <div className="flex flex-col gap-24 items-center pb-14">
             {unit.skills.map((skill) => {
               const offset = ZIGZAG[globalIndex % ZIGZAG.length];
               globalIndex += 1;

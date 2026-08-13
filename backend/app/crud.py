@@ -45,6 +45,12 @@ def _apply_heart_regen(db: Session, user: models.User) -> None:
         db.commit()
 
 
+def get_xp_today(db: Session, user_id: int) -> int:
+    """XP earned so far today, for the daily-goal progress ring."""
+    activity = db.query(models.DailyActivity).filter_by(user_id=user_id, activity_date=date.today()).first()
+    return activity.xp_earned if activity else 0
+
+
 def seconds_until_next_heart(user: models.User) -> int | None:
     if user.hearts >= user.max_hearts or user.last_heart_lost_at is None:
         return None
@@ -237,6 +243,30 @@ def get_leaderboard(db: Session, current_user_id: int, limit: int = 20) -> list[
             "is_current_user": u.id == current_user_id,
         }
         for i, (u, xp) in enumerate(rows)
+    ]
+
+
+# ---------- Streak calendar ----------
+
+def get_weekly_activity(db: Session, user_id: int) -> list[dict]:
+    """Sun-Sat calendar strip for the streak popover, matching Duolingo's UI."""
+    today = date.today()
+    week_start = today - timedelta(days=(today.weekday() + 1) % 7)  # back up to Sunday
+    active_dates = {
+        row.activity_date
+        for row in db.query(models.DailyActivity.activity_date)
+        .filter(models.DailyActivity.user_id == user_id, models.DailyActivity.activity_date >= week_start)
+        .all()
+    }
+    labels = ["S", "M", "T", "W", "T", "F", "S"]
+    return [
+        {
+            "day_label": labels[i],
+            "date": week_start + timedelta(days=i),
+            "active": (week_start + timedelta(days=i)) in active_dates,
+            "is_today": (week_start + timedelta(days=i)) == today,
+        }
+        for i in range(7)
     ]
 
 

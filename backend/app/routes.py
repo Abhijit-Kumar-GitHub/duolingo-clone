@@ -27,8 +27,10 @@ def current_user(
 # ---------- User ----------
 
 @router.get("/user/me", response_model=schemas.UserOut)
-def read_current_user(user: models.User = Depends(current_user)):
-    return user
+def read_current_user(user: models.User = Depends(current_user), db: Session = Depends(get_db)):
+    user_out = schemas.UserOut.model_validate(user)
+    user_out.xp_today = crud.get_xp_today(db, user.id)
+    return user_out
 
 
 @router.post("/user/simulate-day", response_model=schemas.UserOut)
@@ -36,6 +38,11 @@ def simulate_day(user: models.User = Depends(current_user), db: Session = Depend
     """Dev/demo helper — rolls back `last_active_date` a day so you can
     immediately test streak-continue vs streak-break without waiting."""
     return crud.simulate_day_passing(db, user)
+
+
+@router.get("/user/weekly-activity", response_model=list[schemas.DayActivityOut])
+def read_weekly_activity(user: models.User = Depends(current_user), db: Session = Depends(get_db)):
+    return crud.get_weekly_activity(db, user.id)
 
 
 # ---------- Path ----------
@@ -132,6 +139,7 @@ def read_leaderboard(user: models.User = Depends(current_user), db: Session = De
 
 @router.get("/profile", response_model=schemas.ProfileOut)
 def read_profile(user: models.User = Depends(current_user), db: Session = Depends(get_db)):
+    crud.evaluate_achievements(db, user)  # lazy-evaluate so pre-seeded stats also unlock badges
     skills_completed = db.query(models.UserSkillProgress).filter_by(user_id=user.id, status="completed").count()
     lessons_completed = db.query(models.UserLessonCompletion).filter_by(user_id=user.id).count()
     earned = {ua.achievement_id: ua.earned_at for ua in db.query(models.UserAchievement).filter_by(user_id=user.id)}

@@ -8,6 +8,13 @@ from pydantic import BaseModel, ConfigDict
 
 # ---------- User ----------
 
+class DayActivityOut(BaseModel):
+    day_label: str    # "S", "M", "T"...
+    date: date
+    active: bool
+    is_today: bool
+
+
 class UserOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -22,6 +29,7 @@ class UserOut(BaseModel):
     max_hearts: int
     gems: int
     daily_xp_goal: int
+    xp_today: int = 0  # not a User column — set explicitly in routes.read_current_user
     last_active_date: Optional[date] = None
 
 

@@ -19,6 +19,7 @@ interface LessonState {
 
   loadLesson: (skillId: number, currentHearts: number) => Promise<void>;
   submitAnswer: (exerciseId: number, answer: string) => Promise<void>;
+  loseHeartForMismatch: (exerciseId: number) => Promise<void>;
   advance: () => void;
   reset: () => void;
 }
@@ -56,6 +57,20 @@ export const useLessonStore = create<LessonState>((set, get) => ({
       correctCount: get().correctCount + (result.correct ? 1 : 0),
     });
     if (!result.correct && result.hearts_remaining <= 0) {
+      set({ isOutOfHearts: true });
+    }
+  },
+
+  // Match Pairs has no single "check" moment — each mismatched tap should
+  // still cost a heart like the other four exercise types, but without
+  // swapping in the full-screen feedback bar (the exercise itself shows the
+  // mismatch via a shake). Reuses the same check-answer endpoint with a
+  // guaranteed-wrong sentinel purely to run its heart-loss logic.
+  loseHeartForMismatch: async (exerciseId) => {
+    if (get().hearts <= 0) return;
+    const result = await api.checkAnswer(exerciseId, "__mismatch__");
+    set({ hearts: result.hearts_remaining });
+    if (result.hearts_remaining <= 0) {
       set({ isOutOfHearts: true });
     }
   },

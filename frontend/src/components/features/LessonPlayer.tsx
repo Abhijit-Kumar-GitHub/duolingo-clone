@@ -29,7 +29,7 @@ export function LessonPlayer({ skillId }: { skillId: number }) {
   const {
     exercises, currentIndex, hearts, feedback, lastCorrectAnswer,
     isOutOfHearts, isLessonComplete, result, loading,
-    loadLesson, submitAnswer, advance, reset,
+    loadLesson, submitAnswer, loseHeartForMismatch, advance, reset,
   } = useLessonStore();
 
   const [pendingAnswer, setPendingAnswer] = useState<string>("");
@@ -95,7 +95,12 @@ export function LessonPlayer({ skillId }: { skillId: number }) {
           {exercise.type.replace("_", " ")}
         </p>
         <h1 className="text-2xl font-extrabold text-duo-eel mb-8">{exercise.prompt}</h1>
-        <ExerciseComponent exercise={exercise} disabled={answered} onSelect={setPendingAnswer} />
+        <ExerciseComponent
+          exercise={exercise}
+          disabled={answered}
+          onSelect={setPendingAnswer}
+          onMismatch={() => loseHeartForMismatch(exercise.id)}
+        />
       </div>
 
       <FeedbackBar

@@ -8,8 +8,8 @@ function shuffle<T>(arr: T[]): T[] {
   return [...arr].sort(() => Math.random() - 0.5);
 }
 
-export function MatchPairs({ exercise, disabled, onSelect }: {
-  exercise: Exercise; disabled: boolean; onSelect: (answer: string) => void;
+export function MatchPairs({ exercise, disabled, onSelect, onMismatch }: {
+  exercise: Exercise; disabled: boolean; onSelect: (answer: string) => void; onMismatch?: () => void;
 }) {
   const pairs: Record<string, string> = exercise.payload.pairs ?? {};
   const left = useMemo(() => shuffle(Object.keys(pairs)), [exercise.id]);
@@ -40,6 +40,7 @@ export function MatchPairs({ exercise, disabled, onSelect }: {
       setMismatch(value);
       setTimeout(() => setMismatch(null), 400);
       setSelectedLeft(null);
+      onMismatch?.();
     }
   };
 

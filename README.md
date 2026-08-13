@@ -3,8 +3,8 @@
 A functional clone of Duolingo's learning path, lesson loop, and gamification
 mechanics (XP, streaks, hearts, crowns, leaderboard, achievements).
 
-**Live demo:**
-**Repo:**
+**Live demo:** _add your deployed URL here_
+**Repo:** _add your GitHub URL here_
 
 ## Tech stack
 
@@ -37,18 +37,19 @@ duolingo-clone/
 │       │   │   ├── page.tsx        # learning path (home)
 │       │   │   ├── leaderboard/
 │       │   │   ├── profile/
-│       │   │   ├── practice/       # placeholder + dev tools
+│       │   │   ├── practice/       # placeholder + dev tools (simulate day, refill hearts)
+│       │   │   ├── quests/         # placeholder
+│       │   │   ├── shop/           # placeholder (mocked gem store)
 │       │   │   └── settings/       # placeholder
 │       │   ├── lesson/[skillId]/   # full-screen lesson player (no sidebar)
 │       │   └── layout.tsx          # root layout, font
-│       ├── components/
-│       │   ├── ui/                 # (reserved for generic primitives)
-│       │   └── features/
-│       │       ├── Sidebar.tsx, StatsBar.tsx
-│       │       ├── PathMap.tsx, SkillNode.tsx
-│       │       ├── LessonPlayer.tsx, FeedbackBar.tsx, ComingSoon.tsx
-│       │       ├── exercises/      # MultipleChoice, TranslateWordBank, MatchPairs, FillBlank, TypeAnswer
-│       │       └── modals/         # OutOfHeartsModal, LessonCompleteModal
+│       ├── components/features/
+│       │   ├── Sidebar.tsx, StatsBar.tsx, Popover.tsx
+│       │   ├── popovers/           # CoursePopover, StreakPopover, GemsPopover, HeartsPopover
+│       │   ├── PathMap.tsx, SkillNode.tsx
+│       │   ├── LessonPlayer.tsx, FeedbackBar.tsx, ComingSoon.tsx
+│       │   ├── exercises/          # MultipleChoice, TranslateWordBank, MatchPairs, FillBlank, TypeAnswer
+│       │   └── modals/             # OutOfHeartsModal, LessonCompleteModal
 │       ├── store/                  # useUserStore, useLessonStore (Zustand)
 │       └── lib/api.ts              # typed fetch client
 └── README.md
@@ -117,9 +118,13 @@ else changes.
 
 **Branding note:** the sidebar wordmark is a placeholder ("lingo") in the
 same bold rounded-green treatment as the original, rather than a reproduction
-of Duolingo's actual logo asset — the goal was to faithfully recreate the
-*interaction design* (colors, layout, motion, the lesson loop), not to copy
-trademarked brand assets.
+of Duolingo's actual logo asset — real Duolingo's skill icons are bespoke
+illustrated art, which is proprietary and not something this clone
+reproduces; skill nodes instead use plain colored circles with Lucide line
+icons per topic (`components/features/SkillNode.tsx`). The goal throughout
+was to faithfully recreate the *interaction design and UX patterns* (colors,
+layout, motion, the lesson loop, the stats-bar hover popovers), not to copy
+trademarked brand or illustration assets.
 
 ## Database schema
 
@@ -174,6 +179,7 @@ to `1` server-side if omitted). Full interactive docs at `/docs`.
 |---|---|---|
 | GET | `/api/user/me` | Current learner + stats (applies lazy streak decay / heart regen) |
 | POST | `/api/user/simulate-day` | Dev helper: rolls `last_active_date` back a day to demo streak-break logic |
+| GET | `/api/user/weekly-activity` | Sun–Sat activity strip for the streak popover calendar |
 | GET | `/api/path` | Units → skills tree with per-skill lock/available/completed status + crowns |
 | GET | `/api/lesson/{skill_id}` | Next lesson's exercises for a skill (answers withheld) |
 | POST | `/api/lesson/check-answer` | Grades one exercise; deducts a heart on a wrong answer |
@@ -195,13 +201,39 @@ to `1` server-side if omitted). Full interactive docs at `/docs`.
 - 6 achievements and 6 rival users with backdated activity for a populated
   leaderboard on first load.
 
+## Stats-bar popovers (course/streak/gems/hearts)
+
+Each of the four pills in the top-right (`components/features/StatsBar.tsx`)
+opens a hover panel via a shared `Popover` primitive (`components/features/Popover.tsx`)
+— matching real Duolingo's desktop hover behavior — with a short close delay
+so moving the cursor from the pill into the panel doesn't flicker shut. Each
+panel lives in `components/features/popovers/`:
+
+- **CoursePopover** — lists "My Courses" (Spanish, the one seeded course) and
+  an "Add a new course" flow showing other language flags. Picking an
+  unseeded language shows an inline "coming soon" note rather than faking a
+  switch — consistent with the assignment's explicit allowance to mock
+  additional languages.
+- **StreakPopover** — day count plus a real Sun–Sat activity calendar backed
+  by `GET /api/user/weekly-activity` (derived from the `daily_activity`
+  table), and a Streak Society teaser card (mocked — social/friend features
+  are out of scope per spec).
+- **GemsPopover** — balance + a link to `/shop` (Coming Soon placeholder).
+- **HeartsPopover** — heart pips, a live regen countdown (`GET /api/hearts`),
+  a mocked "Unlimited Hearts" upsell, and a working "Refill Hearts" button
+  wired to the real `/api/hearts/refill` endpoint.
+
 ## Known simplifications / assumptions
 
 - Single hardcoded learner (`user_id=1`); no signup/login flow, per spec.
-- Match-pairs mismatches shake but don't deduct a heart client-side (the
-  exercise type doesn't map cleanly onto the single check-answer contract
-  used by the other four types); this is called out as a deliberate scope
-  cut, not an oversight.
+- Match-pairs mismatches reuse the same `/api/lesson/check-answer` heart-loss
+  path as the other four exercise types (via a guaranteed-wrong sentinel
+  answer sent on each mismatched tap), so hearts drain consistently across
+  all exercise types even though match-pairs has no single "check" moment.
+- Achievements are evaluated lazily (on `/api/lesson/complete` and on
+  `/api/profile`) rather than via a background job, so the pre-seeded
+  learner's badges resolve correctly the first time the profile page loads
+  even though no lesson has been played yet in that session.
 - "Practice" page doubles as a small dev panel (simulate a day passing,
   manual heart refill) to make streak/heart edge cases quick to demo without
   waiting on real timers.

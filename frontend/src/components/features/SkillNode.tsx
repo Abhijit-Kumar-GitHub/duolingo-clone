@@ -1,14 +1,26 @@
 "use client";
 
-import { Lock, Check, Crown, Star } from "lucide-react";
+import { Lock, Crown, Hand, UtensilsCrossed, PawPrint, Users, Palette, Plane, Star } from "lucide-react";
 import clsx from "clsx";
 import { SkillNode as SkillNodeType, Unit } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-const COLOR_MAP: Record<string, { bg: string; ring: string; shadow: string }> = {
-  "duo-green": { bg: "bg-duo-green", ring: "ring-duo-green", shadow: "shadow-duo-green" },
-  "duo-blue": { bg: "bg-duo-blue", ring: "ring-duo-blue", shadow: "shadow-duo-blue" },
+// Each skill keeps ONE fixed icon representing its topic (matches classic
+// Duolingo skill bubbles) — status is conveyed by color/lock/crown overlay,
+// not by swapping the icon out for a generic check/star.
+const TOPIC_ICONS: Record<string, any> = {
+  "hand-wave": Hand,
+  utensils: UtensilsCrossed,
+  paw: PawPrint,
+  "home-heart": Users,
+  palette: Palette,
+  plane: Plane,
+};
+
+const COLOR_MAP: Record<string, { bg: string; shadow: string }> = {
+  "duo-green": { bg: "bg-duo-green", shadow: "shadow-duo-green" },
+  "duo-blue": { bg: "bg-duo-blue", shadow: "shadow-duo-blue" },
 };
 
 export function SkillNode({ skill, unit, offset }: { skill: SkillNodeType; unit: Unit; offset: number }) {
@@ -16,8 +28,8 @@ export function SkillNode({ skill, unit, offset }: { skill: SkillNodeType; unit:
   const [showTooltip, setShowTooltip] = useState(false);
   const colors = COLOR_MAP[unit.color_theme] ?? COLOR_MAP["duo-green"];
   const locked = skill.status === "locked";
-  const completed = skill.status === "completed";
   const available = skill.status === "available";
+  const TopicIcon = TOPIC_ICONS[skill.icon_name] ?? Star;
 
   return (
     <div className="relative flex justify-center" style={{ transform: `translateX(${offset}px)` }}>
@@ -37,15 +49,19 @@ export function SkillNode({ skill, unit, offset }: { skill: SkillNodeType; unit:
           "relative w-20 h-20 rounded-full flex items-center justify-center transition-transform",
           "active:translate-y-1",
           locked && "bg-duo-swan shadow-duo-gray cursor-not-allowed",
-          available && `${colors.bg} ${colors.shadow} animate-pop-in`,
-          completed && `${colors.bg} ${colors.shadow}`
+          !locked && `${colors.bg} ${colors.shadow}`,
+          available && "animate-pop-in ring-4 ring-offset-2 ring-duo-green/30"
         )}
       >
-        {locked && <Lock className="text-duo-hare" size={30} />}
-        {available && <Star className="text-white fill-white" size={34} />}
-        {completed && <Check className="text-white" size={36} strokeWidth={3} />}
+        <TopicIcon className={locked ? "text-duo-hare" : "text-white"} size={32} strokeWidth={2.2} />
 
-        {completed && skill.crowns > 0 && (
+        {locked && (
+          <div className="absolute -bottom-1 -right-1 bg-white rounded-full w-7 h-7 flex items-center justify-center border-2 border-duo-swan">
+            <Lock size={13} className="text-duo-hare" />
+          </div>
+        )}
+
+        {skill.crowns > 0 && (
           <div className="absolute -bottom-2 -right-1 bg-duo-yellow rounded-full w-7 h-7 flex items-center justify-center border-2 border-white">
             <Crown size={14} className="text-white fill-white" />
           </div>
