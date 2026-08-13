@@ -88,7 +88,6 @@ export function PathMap({ path }: { path: PathResponse }) {
     return entries;
   });
 
-  let globalIndex = 0;
   let mascotPlaced = false;
   let jumpPlaced = false;
 
@@ -96,6 +95,9 @@ export function PathMap({ path }: { path: PathResponse }) {
     <div className="flex flex-col items-center pb-24 max-w-md mx-auto">
       {path.units.map((unit, unitIdx) => {
         const entries = unitEntries[unitIdx];
+        // Each unit's snake curve starts fresh at offset 0 rather than
+        // carrying momentum over from the previous unit's ending offset.
+        let globalIndex = 0;
 
         return (
           <div key={unit.id} className="w-full mb-4">

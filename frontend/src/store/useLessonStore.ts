@@ -16,6 +16,7 @@ interface LessonState {
   isLessonComplete: boolean;
   result: LessonCompleteResult | null;
   loading: boolean;
+  loadError: boolean;
 
   loadLesson: (skillId: number, currentHearts: number) => Promise<void>;
   submitAnswer: (exerciseId: number, answer: string) => Promise<void>;
@@ -37,6 +38,7 @@ const initialState = {
   isLessonComplete: false,
   result: null,
   loading: false,
+  loadError: false,
 };
 
 export const useLessonStore = create<LessonState>((set, get) => ({
@@ -44,20 +46,28 @@ export const useLessonStore = create<LessonState>((set, get) => ({
 
   loadLesson: async (skillId, currentHearts) => {
     set({ ...initialState, loading: true, skillId, hearts: currentHearts });
-    const lesson = await api.getLesson(skillId);
-    set({ lessonId: lesson.lesson_id, exercises: lesson.exercises, loading: false });
+    try {
+      const lesson = await api.getLesson(skillId);
+      set({ lessonId: lesson.lesson_id, exercises: lesson.exercises, loading: false });
+    } catch {
+      set({ loading: false, loadError: true });
+    }
   },
 
   submitAnswer: async (exerciseId, answer) => {
-    const result = await api.checkAnswer(exerciseId, answer);
-    set({
-      feedback: result.correct ? "correct" : "incorrect",
-      lastCorrectAnswer: result.correct_answer,
-      hearts: result.hearts_remaining,
-      correctCount: get().correctCount + (result.correct ? 1 : 0),
-    });
-    if (!result.correct && result.hearts_remaining <= 0) {
-      set({ isOutOfHearts: true });
+    try {
+      const result = await api.checkAnswer(exerciseId, answer);
+      set({
+        feedback: result.correct ? "correct" : "incorrect",
+        lastCorrectAnswer: result.correct_answer,
+        hearts: result.hearts_remaining,
+        correctCount: get().correctCount + (result.correct ? 1 : 0),
+      });
+      if (!result.correct && result.hearts_remaining <= 0) {
+        set({ isOutOfHearts: true });
+      }
+    } catch {
+      // network hiccup — leave feedback at "idle" so the Check button is still usable
     }
   },
 
@@ -68,10 +78,14 @@ export const useLessonStore = create<LessonState>((set, get) => ({
   // guaranteed-wrong sentinel purely to run its heart-loss logic.
   loseHeartForMismatch: async (exerciseId) => {
     if (get().hearts <= 0) return;
-    const result = await api.checkAnswer(exerciseId, "__mismatch__");
-    set({ hearts: result.hearts_remaining });
-    if (result.hearts_remaining <= 0) {
-      set({ isOutOfHearts: true });
+    try {
+      const result = await api.checkAnswer(exerciseId, "__mismatch__");
+      set({ hearts: result.hearts_remaining });
+      if (result.hearts_remaining <= 0) {
+        set({ isOutOfHearts: true });
+      }
+    } catch {
+      // network hiccup — skip this heart-loss rather than crash the lesson
     }
   },
 
@@ -80,9 +94,9 @@ export const useLessonStore = create<LessonState>((set, get) => ({
     const nextIndex = currentIndex + 1;
     if (nextIndex >= exercises.length) {
       // lesson finished — fire completion request
-      api.completeLesson(lessonId!, correctCount, exercises.length, hearts).then((result) => {
-        set({ isLessonComplete: true, result });
-      });
+      api.completeLesson(lessonId!, correctCount, exercises.length, hearts)
+        .then((result) => set({ isLessonComplete: true, result }))
+        .catch(() => set({ loadError: true }));
       return;
     }
     set({ currentIndex: nextIndex, feedback: "idle", lastCorrectAnswer: null });

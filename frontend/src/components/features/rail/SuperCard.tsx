@@ -1,6 +1,7 @@
 "use client";
 
 import { Infinity as InfinityIcon } from "lucide-react";
+import { GlossyBadge } from "../GlossyBadge";
 
 // Static promo card — Super/subscriptions are explicitly a mockable
 // placeholder per the assignment spec, so this never actually starts a
@@ -11,7 +12,7 @@ export function SuperCard() {
       <span className="absolute top-4 right-4 bg-duo-yellow text-duo-eel text-[10px] font-extrabold px-2 py-0.5 rounded-md tracking-wide">
         SUPER
       </span>
-      <InfinityIcon className="text-duo-purple mb-3" size={28} strokeWidth={2.5} />
+      <GlossyBadge color="purple" size="sm" icon={InfinityIcon} className="mb-3" />
       <p className="font-extrabold leading-snug mb-3">
         Start a 1 week free trial to enjoy exclusive Super benefits
       </p>

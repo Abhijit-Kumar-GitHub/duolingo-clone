@@ -4,6 +4,7 @@ import { Zap, Gift, Lock } from "lucide-react";
 import { useUserStore } from "@/store/useUserStore";
 import { RightRail } from "@/components/features/rail/RightRail";
 import { MonthlyChallengeCard } from "@/components/features/rail/MonthlyChallengeCard";
+import { GlossyBadge } from "@/components/features/GlossyBadge";
 
 function hoursUntilMidnight(): number {
   const now = new Date();
@@ -33,7 +34,7 @@ export default function QuestsPage() {
         </div>
 
         <div className="border border-duo-swan rounded-2xl p-4 flex items-center gap-3 mb-3">
-          <Zap className="text-duo-yellow fill-duo-yellow shrink-0" size={26} />
+          <GlossyBadge color="yellow" icon={Zap} />
           <div className="flex-1">
             <p className="font-bold text-sm text-duo-eel mb-1.5">Earn {user.daily_xp_goal} XP</p>
             <div className="h-3 bg-duo-swan rounded-full overflow-hidden">
@@ -41,15 +42,11 @@ export default function QuestsPage() {
             </div>
             <p className="text-xs text-duo-wolf mt-1">{Math.min(user.xp_today, user.daily_xp_goal)} / {user.daily_xp_goal}</p>
           </div>
-          <div className="bg-duo-yellow/15 rounded-lg p-2 shrink-0">
-            <Gift className="text-duo-fox" size={20} />
-          </div>
+          <GlossyBadge color="fox" size="sm" icon={Gift} />
         </div>
 
         <div className="border border-duo-swan rounded-2xl p-4 flex items-center gap-3 opacity-50">
-          <div className="bg-duo-swan rounded-full p-2 shrink-0">
-            <Lock className="text-duo-hare" size={18} />
-          </div>
+          <GlossyBadge color="grey" size="sm" icon={Lock} muted />
           <p className="text-sm font-bold text-duo-wolf">More quests unlock soon</p>
         </div>
       </div>

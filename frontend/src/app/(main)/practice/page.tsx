@@ -20,7 +20,7 @@ export default function PracticePage() {
       <div className="max-w-sm mx-auto border-t border-duo-swan pt-6 mt-6 flex flex-col gap-2">
         <p className="text-xs font-bold uppercase text-duo-hare text-center mb-1">Dev tools</p>
         <button
-          onClick={async () => { await api.simulateDay(); fetchUser(); }}
+          onClick={async () => { await api.simulateDay().catch(() => {}); fetchUser(); }}
           className="btn-duo-outline w-full flex items-center justify-center gap-2"
         >
           <RefreshCcw size={16} /> Simulate a day passing

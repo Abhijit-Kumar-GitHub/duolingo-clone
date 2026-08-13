@@ -59,10 +59,13 @@ export function PathNode({
           status === "current" && "animate-pop-in ring-4 ring-offset-2 ring-duo-green/30"
         )}
       >
+        {/* glossy top-light / bottom-shade overlay so the flat color reads as an embossed disc, not a flat circle */}
+        <span className="pointer-events-none absolute inset-0 rounded-[50%/44%] bg-gradient-to-b from-white/45 via-white/0 to-black/10" />
+
         {status === "done" ? (
-          <Check className="text-white" size={28} strokeWidth={3.5} />
+          <Check className="relative text-white" size={28} strokeWidth={3.5} />
         ) : (
-          <Icon className={lit ? "text-white" : "text-duo-hare"} size={26} strokeWidth={2.2} />
+          <Icon className={clsx("relative", lit ? "text-white" : "text-duo-hare")} size={26} strokeWidth={2.2} />
         )}
 
         {!!crowns && (

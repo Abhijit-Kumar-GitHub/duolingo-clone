@@ -6,6 +6,7 @@ import { Flame, Trophy, Star, Award, Footprints, Medal } from "lucide-react";
 import clsx from "clsx";
 import { RightRail } from "@/components/features/rail/RightRail";
 import { FollowingWidget } from "@/components/features/rail/FollowingWidget";
+import { GlossyBadge } from "@/components/features/GlossyBadge";
 
 const ICONS: Record<string, any> = { footprints: Footprints, star: Star, flame: Flame, trophy: Trophy, medal: Medal };
 
@@ -33,10 +34,10 @@ export default function ProfilePage() {
         </div>
 
         <div className="grid grid-cols-2 gap-3 mb-8">
-          <StatCard icon={<Flame className="text-duo-fox fill-duo-fox" />} label="Day streak" value={user.streak} />
-          <StatCard icon={<Trophy className="text-duo-yellow fill-duo-yellow" />} label="Total XP" value={user.total_xp} />
-          <StatCard icon={<Star className="text-duo-blue fill-duo-blue" />} label="Skills completed" value={profile.skills_completed} />
-          <StatCard icon={<Award className="text-duo-purple fill-duo-purple" />} label="Lessons completed" value={profile.lessons_completed} />
+          <StatCard icon={Flame} color="fox" label="Day streak" value={user.streak} />
+          <StatCard icon={Trophy} color="yellow" label="Total XP" value={user.total_xp} />
+          <StatCard icon={Star} color="blue" label="Skills completed" value={profile.skills_completed} />
+          <StatCard icon={Award} color="purple" label="Lessons completed" value={profile.lessons_completed} />
         </div>
 
         <div className="flex items-center justify-between mb-3">
@@ -49,12 +50,7 @@ export default function ProfilePage() {
             const pct = a.earned ? 100 : 0; // requirement progress isn't exposed by the API — earned is binary
             return (
               <div key={a.code} className="flex items-center gap-4 py-4">
-                <div className={clsx(
-                  "rounded-xl p-2.5 shrink-0",
-                  a.earned ? "bg-duo-yellow/15" : "bg-duo-swan"
-                )}>
-                  <Icon size={24} className={a.earned ? "text-duo-yellow" : "text-duo-hare"} />
-                </div>
+                <GlossyBadge color="yellow" muted={!a.earned} icon={Icon} />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-1">
                     <p className="font-extrabold text-sm text-duo-eel">{a.title}</p>
@@ -77,10 +73,10 @@ export default function ProfilePage() {
   );
 }
 
-function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: number }) {
+function StatCard({ icon, color, label, value }: { icon: any; color: "fox" | "yellow" | "blue" | "purple"; label: string; value: number }) {
   return (
     <div className="border border-duo-swan rounded-2xl p-4 flex items-center gap-3">
-      {icon}
+      <GlossyBadge color={color} size="sm" icon={icon} />
       <div>
         <p className="font-extrabold text-xl text-duo-eel leading-none">{value}</p>
         <p className="text-xs text-duo-wolf">{label}</p>

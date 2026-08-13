@@ -10,10 +10,23 @@ import { DailyQuestsWidget } from "@/components/features/rail/DailyQuestsWidget"
 
 export default function HomePage() {
   const [path, setPath] = useState<PathResponse | null>(null);
+  const [error, setError] = useState(false);
 
-  useEffect(() => {
-    api.getPath().then(setPath);
-  }, []);
+  const loadPath = () => {
+    setError(false);
+    api.getPath().then(setPath).catch(() => setError(true));
+  };
+
+  useEffect(loadPath, []);
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center gap-3 pt-24 text-center">
+        <p className="text-duo-hare font-bold">Couldn't load your path — is the backend running?</p>
+        <button onClick={loadPath} className="btn-duo-outline">Retry</button>
+      </div>
+    );
+  }
 
   if (!path) {
     return <div className="flex justify-center pt-24 text-duo-hare font-bold">Loading your path...</div>;

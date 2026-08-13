@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { Zap, Target, Flame, Crown } from "lucide-react";
 import { LessonCompleteResult } from "@/lib/api";
+import { GlossyBadge, GlossyColor } from "../GlossyBadge";
 
 const Confetti = dynamic(() => import("react-confetti"), { ssr: false });
 
@@ -28,10 +29,10 @@ export function LessonCompleteModal({ result }: { result: LessonCompleteResult }
         )}
 
         <div className="grid grid-cols-2 gap-3 w-full my-6">
-          <StatChip icon={<Zap className="text-duo-yellow fill-duo-yellow" />} label="Total XP" value={`+${result.xp_earned}`} />
-          <StatChip icon={<Flame className="text-duo-fox fill-duo-fox" />} label="Day streak" value={result.streak} />
-          <StatChip icon={<Crown className="text-duo-yellow fill-duo-yellow" />} label="Crowns" value={result.crowns} />
-          <StatChip icon={<Target className="text-duo-blue fill-duo-blue" />} label="Daily goal" value={result.daily_goal_met ? "Met!" : "In progress"} />
+          <StatChip icon={Zap} color="yellow" label="Total XP" value={`+${result.xp_earned}`} />
+          <StatChip icon={Flame} color="fox" label="Day streak" value={result.streak} />
+          <StatChip icon={Crown} color="yellow" label="Crowns" value={result.crowns} />
+          <StatChip icon={Target} color="blue" label="Daily goal" value={result.daily_goal_met ? "Met!" : "In progress"} />
         </div>
 
         <button onClick={() => router.push("/")} className="btn-duo-green w-full">
@@ -42,10 +43,10 @@ export function LessonCompleteModal({ result }: { result: LessonCompleteResult }
   );
 }
 
-function StatChip({ icon, label, value }: { icon: React.ReactNode; label: string; value: string | number }) {
+function StatChip({ icon, color, label, value }: { icon: any; color: GlossyColor; label: string; value: string | number }) {
   return (
     <div className="border border-duo-swan rounded-2xl p-3 flex flex-col items-center gap-1">
-      {icon}
+      <GlossyBadge color={color} size="sm" icon={icon} className="mb-1" />
       <p className="font-extrabold text-lg text-duo-eel leading-none">{value}</p>
       <p className="text-xs text-duo-wolf">{label}</p>
     </div>

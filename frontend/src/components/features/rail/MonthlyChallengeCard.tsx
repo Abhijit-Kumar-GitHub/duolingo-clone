@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Award } from "lucide-react";
+import { GlossyBadge } from "../GlossyBadge";
 
 // Quests-page-only rail teaser — monthly challenges have no backend model
 // (out of scope per the assignment's bonus/mocked-content allowances), so
@@ -10,9 +11,7 @@ export function MonthlyChallengeCard() {
   return (
     <div className="border border-duo-swan rounded-2xl p-4">
       <div className="flex items-center gap-3 mb-3">
-        <div className="bg-duo-yellow/15 rounded-xl p-2 shrink-0">
-          <Award className="text-duo-yellow fill-duo-yellow" size={22} />
-        </div>
+        <GlossyBadge color="yellow" size="sm" icon={Award} />
         <p className="font-extrabold text-duo-eel text-sm leading-snug">
           Monthly challenges unlock soon!
         </p>

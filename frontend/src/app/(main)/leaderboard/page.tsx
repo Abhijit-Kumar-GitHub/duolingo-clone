@@ -6,6 +6,7 @@ import { Trophy } from "lucide-react";
 import clsx from "clsx";
 import { RightRail } from "@/components/features/rail/RightRail";
 import { DailyQuestsWidget } from "@/components/features/rail/DailyQuestsWidget";
+import { GlossyBadge } from "@/components/features/GlossyBadge";
 
 const MEDAL_COLOR = ["text-duo-yellow", "text-duo-hare", "text-duo-fox"];
 
@@ -25,23 +26,14 @@ export default function LeaderboardPage() {
       <div className="flex-1 min-w-0 max-w-lg">
       <div className="flex items-center justify-center gap-3 mb-6">
         {LEAGUES.map((league) => (
-          <div
-            key={league}
-            title={league}
-            className={clsx(
-              "w-10 h-10 rounded-full flex items-center justify-center border-2",
-              league === "Bronze" ? "bg-duo-fox/15 border-duo-fox" : "bg-duo-swan/60 border-transparent opacity-60"
-            )}
-          >
-            <Trophy size={18} className={league === "Bronze" ? "text-duo-fox" : "text-duo-hare"} />
+          <div key={league} title={league} className={clsx(league !== "Bronze" && "opacity-50")}>
+            <GlossyBadge color="fox" size="sm" icon={Trophy} muted={league !== "Bronze"} />
           </div>
         ))}
       </div>
 
       <div className="flex flex-col items-center text-center mb-6">
-        <div className="bg-duo-yellow/15 rounded-full p-4 mb-3">
-          <Trophy className="text-duo-yellow" size={40} />
-        </div>
+        <GlossyBadge color="yellow" size="lg" icon={Trophy} className="mb-3" />
         <h1 className="text-2xl font-extrabold text-duo-eel">Bronze League</h1>
         <p className="text-duo-wolf text-sm">Top learners this week</p>
       </div>

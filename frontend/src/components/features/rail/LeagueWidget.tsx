@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Mountain } from "lucide-react";
+import { GlossyBadge } from "../GlossyBadge";
 
 // Reused across Learn/Shop/Quests, mirroring how real Duolingo repeats this
 // exact card in its right rail on every main page. Static league name — a
@@ -17,9 +18,7 @@ export function LeagueWidget() {
         </Link>
       </div>
       <div className="flex items-center gap-3">
-        <div className="bg-duo-fox/10 rounded-xl p-2 shrink-0">
-          <Mountain className="text-duo-fox" size={22} />
-        </div>
+        <GlossyBadge color="fox" size="sm" icon={Mountain} />
         <p className="text-xs text-duo-wolf leading-snug">
           Complete a lesson to join this week's leaderboard and compete against other learners.
         </p>

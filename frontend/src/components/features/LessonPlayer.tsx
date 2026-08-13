@@ -28,7 +28,7 @@ export function LessonPlayer({ skillId }: { skillId: number }) {
   const fetchUser = useUserStore((s) => s.fetchUser);
   const {
     exercises, currentIndex, hearts, feedback, lastCorrectAnswer,
-    isOutOfHearts, isLessonComplete, result, loading,
+    isOutOfHearts, isLessonComplete, result, loading, loadError,
     loadLesson, submitAnswer, loseHeartForMismatch, advance, reset,
   } = useLessonStore();
 
@@ -45,6 +45,18 @@ export function LessonPlayer({ skillId }: { skillId: number }) {
     // keep the top-bar heart count in sync as soon as the lesson mutates it
     if (!loading) fetchUser();
   }, [hearts]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (loadError) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-3 text-center px-4">
+        <p className="text-duo-hare font-bold">Something went wrong loading this lesson.</p>
+        <div className="flex gap-3">
+          <button onClick={() => loadLesson(skillId, hearts)} className="btn-duo-outline">Retry</button>
+          <button onClick={() => router.push("/")} className="btn-duo-outline">Exit</button>
+        </div>
+      </div>
+    );
+  }
 
   if (loading || exercises.length === 0) {
     return <div className="min-h-screen flex items-center justify-center text-duo-hare font-bold">Loading lesson...</div>;

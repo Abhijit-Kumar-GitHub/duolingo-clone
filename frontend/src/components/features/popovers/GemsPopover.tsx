@@ -3,6 +3,7 @@
 import { Gem } from "lucide-react";
 import Link from "next/link";
 import { Popover, PopoverPanel } from "../Popover";
+import { GlossyBadge } from "../GlossyBadge";
 
 export function GemsPopover({ gems }: { gems: number }) {
   return (
@@ -16,9 +17,7 @@ export function GemsPopover({ gems }: { gems: number }) {
     >
       <PopoverPanel className="w-64">
         <div className="flex items-center gap-3 mb-1">
-          <div className="bg-duo-yellow/15 rounded-xl p-2">
-            <Gem className="text-duo-blue fill-duo-blue" size={26} />
-          </div>
+          <GlossyBadge color="blue" size="sm" icon={Gem} />
           <div>
             <p className="font-extrabold text-duo-eel">Gems</p>
             <p className="text-sm text-duo-wolf">You have {gems} gems</p>

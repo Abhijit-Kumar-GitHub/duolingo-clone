@@ -21,7 +21,7 @@ export function HeartsPopover({ hearts, maxHearts, onChange }: {
   const [notice, setNotice] = useState<string | null>(null);
 
   useEffect(() => {
-    api.getHearts().then((h) => setNextIn(h.next_heart_in_seconds));
+    api.getHearts().then((h) => setNextIn(h.next_heart_in_seconds)).catch(() => {});
   }, [hearts]);
 
   const refill = async () => {

@@ -10,7 +10,7 @@ export function StreakPopover({ streak }: { streak: number }) {
   const [days, setDays] = useState<DayActivity[] | null>(null);
 
   useEffect(() => {
-    api.getWeeklyActivity().then(setDays);
+    api.getWeeklyActivity().then(setDays).catch(() => {});
   }, []);
 
   return (

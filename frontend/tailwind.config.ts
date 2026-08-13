@@ -33,6 +33,8 @@ const config: Config = {
         "duo-blue": "0 4px 0 #1899D6",
         "duo-red": "0 4px 0 #EA2B2B",
         "duo-yellow": "0 4px 0 #E6B800",
+        "duo-purple": "0 4px 0 #A568C9",
+        "duo-fox": "0 4px 0 #CC7A00",
         "duo-gray": "0 4px 0 #E5E5E5",
         "duo-card": "0 2px 0 #E5E5E5",
       },
