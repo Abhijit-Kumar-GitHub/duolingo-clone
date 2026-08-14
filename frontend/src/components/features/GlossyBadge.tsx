@@ -3,7 +3,7 @@
 import { useState } from "react";
 import clsx from "clsx";
 
-export type GlossyColor = "green" | "blue" | "red" | "yellow" | "purple" | "fox" | "grey";
+export type GlossyColor = "green" | "blue" | "red" | "yellow" | "purple" | "teal" | "fox" | "grey";
 
 // Three-stop ramps (top face / rim top / rim bottom) per color, in hex —
 // centralized here as the single source of truth for this one component,
@@ -15,6 +15,7 @@ const COLOR_MAP: Record<GlossyColor, { face: string; rimTop: string; rimBottom: 
   red: { face: "#FF4B4B", rimTop: "#EA2B2B", rimBottom: "#C21F1F" },
   yellow: { face: "#FFC800", rimTop: "#E6B800", rimBottom: "#C29A00" },
   purple: { face: "#CE82FF", rimTop: "#A568C9", rimBottom: "#8A54A8" },
+  teal: { face: "#00CD9C", rimTop: "#00A87E", rimBottom: "#008A68" },
   fox: { face: "#FF9600", rimTop: "#CC7A00", rimBottom: "#A66200" },
   grey: { face: "#E5E5E5", rimTop: "#CFCFCF", rimBottom: "#B8B8B8" },
 };

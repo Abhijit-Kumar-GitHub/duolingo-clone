@@ -17,8 +17,11 @@ interface LessonState {
   result: LessonCompleteResult | null;
   loading: boolean;
   loadError: boolean;
+  // Replaying an already-finished node from its Practice button: the
+  // completion call halves XP and skips crown/unlock progress server-side.
+  practice: boolean;
 
-  loadLesson: (skillId: number, currentHearts: number) => Promise<void>;
+  loadLesson: (skillId: number, currentHearts: number, practice?: boolean) => Promise<void>;
   submitAnswer: (exerciseId: number, answer: string) => Promise<void>;
   loseHeartForMismatch: (exerciseId: number) => Promise<void>;
   advance: () => void;
@@ -39,13 +42,14 @@ const initialState = {
   result: null,
   loading: false,
   loadError: false,
+  practice: false,
 };
 
 export const useLessonStore = create<LessonState>((set, get) => ({
   ...initialState,
 
-  loadLesson: async (skillId, currentHearts) => {
-    set({ ...initialState, loading: true, skillId, hearts: currentHearts });
+  loadLesson: async (skillId, currentHearts, practice = false) => {
+    set({ ...initialState, loading: true, skillId, hearts: currentHearts, practice });
     try {
       const lesson = await api.getLesson(skillId);
       set({ lessonId: lesson.lesson_id, exercises: lesson.exercises, loading: false });
@@ -90,11 +94,11 @@ export const useLessonStore = create<LessonState>((set, get) => ({
   },
 
   advance: () => {
-    const { currentIndex, exercises, lessonId, correctCount, hearts } = get();
+    const { currentIndex, exercises, lessonId, correctCount, hearts, practice } = get();
     const nextIndex = currentIndex + 1;
     if (nextIndex >= exercises.length) {
       // lesson finished — fire completion request
-      api.completeLesson(lessonId!, correctCount, exercises.length, hearts)
+      api.completeLesson(lessonId!, correctCount, exercises.length, hearts, practice)
         .then((result) => set({ isLessonComplete: true, result }))
         .catch(() => set({ loadError: true }));
       return;

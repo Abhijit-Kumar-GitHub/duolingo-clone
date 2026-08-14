@@ -33,88 +33,172 @@ def type_answer(prompt, answer, hint=""):
 
 
 # ---- Per-topic vocab pools + fill-in-the-blank sentence bank ---------------
-# Real (small) Spanish vocab per topic, 14 pairs each — sized so a skill's
-# worst-case exercise draw (up to 8 exercises/lesson, one of which can be a
-# 3-word MATCH_PAIRS) never needs to reuse a word within the same lesson.
-# (spanish, english) tuples.
+# Themed to mirror the real Spanish course's Section 1, Units 1-3 ("Order at
+# a café", "Greet people and say goodbye", "Say where you are from"). The
+# vocabulary is our own small authored set in that course's style, not a copy
+# of Duolingo's proprietary lesson content.
+#
+# 14 pairs per pool — sized so a skill's worst-case exercise draw (up to 8
+# exercises/lesson, of which at most two can be a 5-pair MATCH_PAIRS) never
+# needs to reuse a word within the same lesson. (spanish, english) tuples.
 
 VOCAB = {
-    "Greetings": [
-        ("Hola", "Hello"), ("Adiós", "Goodbye"), ("Buenos días", "Good morning"),
-        ("Buenas tardes", "Good afternoon"), ("Buenas noches", "Good night"),
-        ("Por favor", "Please"), ("Gracias", "Thank you"), ("De nada", "You're welcome"),
-        ("Lo siento", "Sorry"), ("Perdón", "Excuse me"), ("Mucho gusto", "Nice to meet you"),
-        ("Hasta luego", "See you later"), ("¿Cómo estás?", "How are you?"), ("Bienvenido", "Welcome"),
+    # --- Unit 1: Order at a café ---
+    "cafe_drinks": [
+        ("el café", "the coffee"), ("el té", "the tea"), ("el agua", "the water"),
+        ("la leche", "the milk"), ("el jugo", "the juice"), ("el vaso", "the glass"),
+        ("la taza", "the cup"), ("el hielo", "the ice"), ("frío", "cold"), ("caliente", "hot"),
+        ("un refresco", "a soda"), ("con leche", "with milk"), ("sin azúcar", "without sugar"),
+        ("la bebida", "the drink"),
     ],
-    "Food": [
-        ("La manzana", "Apple"), ("El agua", "Water"), ("El pan", "Bread"), ("El café", "Coffee"),
-        ("La leche", "Milk"), ("La fruta", "Fruit"), ("La carne", "Meat"), ("El queso", "Cheese"),
-        ("La ensalada", "Salad"), ("El arroz", "Rice"), ("La sopa", "Soup"), ("El pollo", "Chicken"),
-        ("El pescado", "Fish"), ("La naranja", "Orange"),
+    "cafe_food": [
+        ("el sándwich", "the sandwich"), ("el pan", "the bread"), ("la sopa", "the soup"),
+        ("la ensalada", "the salad"), ("el postre", "the dessert"), ("la fruta", "the fruit"),
+        ("el queso", "the cheese"), ("el huevo", "the egg"), ("el pollo", "the chicken"),
+        ("el arroz", "the rice"), ("la galleta", "the cookie"), ("el pastel", "the cake"),
+        ("la carne", "the meat"), ("el pescado", "the fish"),
     ],
-    "Animals": [
-        ("El perro", "Dog"), ("El gato", "Cat"), ("El pájaro", "Bird"), ("El caballo", "Horse"),
-        ("El pez", "Fish"), ("La vaca", "Cow"), ("El león", "Lion"), ("El oso", "Bear"),
-        ("El conejo", "Rabbit"), ("La oveja", "Sheep"), ("El elefante", "Elephant"),
-        ("El ratón", "Mouse"), ("La gallina", "Hen"), ("El tigre", "Tiger"),
+    "cafe_polite": [
+        ("por favor", "please"), ("gracias", "thank you"), ("de nada", "you're welcome"),
+        ("perdón", "excuse me"), ("lo siento", "sorry"), ("la cuenta", "the bill"),
+        ("quiero", "I want"), ("necesito", "I need"), ("sí", "yes"), ("no", "no"),
+        ("claro", "of course"), ("muy bien", "very well"), ("otra vez", "again"),
+        ("¿cuánto cuesta?", "how much is it?"),
     ],
-    "Family": [
-        ("La madre", "Mother"), ("El padre", "Father"), ("El hermano", "Brother"),
-        ("La hermana", "Sister"), ("Los abuelos", "Grandparents"), ("La familia", "Family"),
-        ("El hijo", "Son"), ("La hija", "Daughter"), ("El tío", "Uncle"), ("La tía", "Aunt"),
-        ("El primo", "Cousin (m.)"), ("La prima", "Cousin (f.)"), ("Los padres", "Parents"),
-        ("El abuelo", "Grandfather"),
+    "cafe_table": [
+        ("la mesa", "the table"), ("el menú", "the menu"), ("la silla", "the chair"),
+        ("el plato", "the plate"), ("el tenedor", "the fork"), ("la cuchara", "the spoon"),
+        ("el cuchillo", "the knife"), ("la servilleta", "the napkin"), ("el mesero", "the waiter"),
+        ("la propina", "the tip"), ("para llevar", "to go"), ("aquí", "here"),
+        ("la orden", "the order"), ("abierto", "open"),
     ],
-    "Colors": [
-        ("Rojo", "Red"), ("Azul", "Blue"), ("Verde", "Green"), ("Amarillo", "Yellow"),
-        ("Negro", "Black"), ("Blanco", "White"), ("Gris", "Gray"), ("Rosado", "Pink"),
-        ("Morado", "Purple"), ("Marrón", "Brown"), ("Naranja", "Orange"), ("Dorado", "Golden"),
-        ("Plateado", "Silver"), ("Celeste", "Sky blue"),
+    # --- Unit 2: Greet people and say goodbye ---
+    "greet_hello": [
+        ("hola", "hello"), ("buenos días", "good morning"), ("buenas tardes", "good afternoon"),
+        ("buenas noches", "good evening"), ("¿cómo estás?", "how are you?"), ("bien", "well"),
+        ("muy bien", "very well"), ("más o menos", "so-so"), ("¿qué tal?", "what's up?"),
+        ("mucho gusto", "nice to meet you"), ("bienvenido", "welcome"), ("¿y tú?", "and you?"),
+        ("encantado", "delighted"), ("igualmente", "likewise"),
     ],
-    "Travel": [
-        ("El aeropuerto", "Airport"), ("El hotel", "Hotel"), ("La maleta", "Suitcase"),
-        ("El pasaporte", "Passport"), ("El tren", "Train"), ("El boleto", "Ticket"),
-        ("El mapa", "Map"), ("La playa", "Beach"), ("El avión", "Airplane"),
-        ("La estación", "Station"), ("El taxi", "Taxi"), ("La reserva", "Reservation"),
-        ("El viaje", "Trip"), ("La ciudad", "City"),
+    "greet_names": [
+        ("me llamo", "my name is"), ("¿cómo te llamas?", "what is your name?"),
+        ("el nombre", "the name"), ("señor", "sir"), ("señora", "ma'am"), ("señorita", "miss"),
+        ("el amigo", "the friend"), ("la amiga", "the friend (f.)"), ("el chico", "the boy"),
+        ("la chica", "the girl"), ("el hombre", "the man"), ("la mujer", "the woman"),
+        ("la gente", "the people"), ("¿quién?", "who?"),
+    ],
+    "greet_bye": [
+        ("adiós", "goodbye"), ("hasta luego", "see you later"), ("hasta mañana", "see you tomorrow"),
+        ("nos vemos", "see you"), ("hasta pronto", "see you soon"), ("cuídate", "take care"),
+        ("buen viaje", "have a good trip"), ("buenas noches", "good night"), ("chao", "bye"),
+        ("que tengas", "may you have"), ("un buen día", "a good day"), ("gracias", "thank you"),
+        ("de nada", "you're welcome"), ("con permiso", "excuse me"),
+    ],
+    "greet_howareyou": [
+        ("estoy bien", "I am well"), ("estoy cansado", "I am tired"), ("estoy feliz", "I am happy"),
+        ("estoy triste", "I am sad"), ("tengo hambre", "I am hungry"), ("tengo sed", "I am thirsty"),
+        ("un poco", "a little"), ("mucho", "a lot"), ("hoy", "today"), ("ahora", "now"),
+        ("también", "also"), ("pero", "but"), ("porque", "because"), ("siempre", "always"),
+    ],
+    # --- Unit 3: Say where you are from ---
+    "from_country": [
+        ("soy de", "I am from"), ("¿de dónde eres?", "where are you from?"), ("España", "Spain"),
+        ("México", "Mexico"), ("Argentina", "Argentina"), ("Colombia", "Colombia"),
+        ("Perú", "Peru"), ("Chile", "Chile"), ("el país", "the country"), ("la ciudad", "the city"),
+        ("aquí", "here"), ("allí", "there"), ("el mundo", "the world"), ("eres de", "you are from"),
+    ],
+    "from_language": [
+        ("el español", "Spanish"), ("el inglés", "English"), ("hablo", "I speak"),
+        ("hablas", "you speak"), ("un poco", "a little"), ("no entiendo", "I do not understand"),
+        ("la palabra", "the word"), ("estudio", "I study"), ("aprendo", "I learn"),
+        ("el idioma", "the language"), ("despacio", "slowly"), ("otra vez", "again"),
+        ("fácil", "easy"), ("difícil", "difficult"),
+    ],
+    "from_living": [
+        ("vivo en", "I live in"), ("¿dónde vives?", "where do you live?"), ("la casa", "the house"),
+        ("mi casa", "my house"), ("el apartamento", "the apartment"), ("la calle", "the street"),
+        ("el barrio", "the neighborhood"), ("cerca", "near"), ("lejos", "far"),
+        ("el pueblo", "the town"), ("solo", "alone"), ("nuevo", "new"), ("grande", "big"),
+        ("pequeño", "small"),
+    ],
+    "from_about": [
+        ("mi familia", "my family"), ("mamá", "mom"), ("papá", "dad"), ("tengo", "I have"),
+        ("los años", "the years"), ("el trabajo", "the job"), ("trabajo en", "I work at"),
+        ("el estudiante", "the student"), ("el maestro", "the teacher"), ("el libro", "the book"),
+        ("el perro", "the dog"), ("el gato", "the cat"), ("mi amigo", "my friend"),
+        ("me gusta", "I like"),
     ],
 }
 
 # (prompt, sentence-with-blank, answer, options) — options always include the answer.
 FILL_BLANK_BANK = {
-    "Greetings": [
+    "cafe_drinks": [
+        ("Complete the sentence", "Quiero un vaso de ___.", "agua", ["agua", "pan", "mesa", "silla"]),
+        ("Complete the sentence", "Me gusta el café con ___.", "leche", ["leche", "hielo", "queso", "pollo"]),
+        ("Complete the sentence", "El ___ está caliente.", "té", ["té", "jugo", "pan", "postre"]),
+    ],
+    "cafe_food": [
+        ("Complete the sentence", "Como un ___ de queso.", "sándwich", ["sándwich", "vaso", "menú", "café"]),
+        ("Complete the sentence", "La ___ está muy caliente.", "sopa", ["sopa", "galleta", "propina", "silla"]),
+        ("Complete the sentence", "De postre quiero un ___.", "pastel", ["pastel", "huevo", "arroz", "plato"]),
+    ],
+    "cafe_polite": [
+        ("Complete the sentence", "La cuenta, por ___.", "favor", ["favor", "nada", "gusto", "aquí"]),
+        ("Complete the sentence", "Muchas ___ por todo.", "gracias", ["gracias", "perdón", "claro", "quiero"]),
+        ("Complete the sentence", "___ un café, por favor.", "Quiero", ["Quiero", "Gracias", "Perdón", "Claro"]),
+    ],
+    "cafe_table": [
+        ("Complete the sentence", "El ___ trae la comida.", "mesero", ["mesero", "menú", "plato", "tenedor"]),
+        ("Complete the sentence", "¿Me trae el ___, por favor?", "menú", ["menú", "hielo", "pollo", "barrio"]),
+        ("Complete the sentence", "Es para ___.", "llevar", ["llevar", "aquí", "abierto", "propina"]),
+    ],
+    "greet_hello": [
         ("Complete the greeting", "___, ¿cómo estás?", "Hola", ["Hola", "Adiós", "Gracias", "Agua"]),
-        ("Complete the sentence", "Muchas ___ por tu ayuda.", "Gracias", ["Gracias", "Por favor", "Perdón", "Hola"]),
-        ("Complete the farewell", "___, nos vemos mañana.", "Hasta luego", ["Hasta luego", "Buenos días", "Gracias", "Lo siento"]),
+        ("Complete the greeting", "Buenos ___, señora.", "días", ["días", "tardes", "noches", "gusto"]),
+        ("Complete the sentence", "Mucho ___ en conocerte.", "gusto", ["gusto", "bien", "tal", "poco"]),
     ],
-    "Food": [
-        ("Complete the sentence", "Quiero un vaso de ___.", "agua", ["agua", "pan", "leche", "carne"]),
-        ("Complete the sentence", "Como ___ con mantequilla.", "pan", ["pan", "queso", "arroz", "sopa"]),
-        ("Complete the sentence", "Me gusta el ___ con leche.", "café", ["café", "agua", "pescado", "pollo"]),
+    "greet_names": [
+        ("Complete the sentence", "Me ___ Ana.", "llamo", ["llamo", "hablo", "vivo", "tengo"]),
+        ("Complete the question", "¿Cómo te ___?", "llamas", ["llamas", "hablas", "vives", "eres"]),
+        ("Complete the sentence", "Ella es mi ___.", "amiga", ["amiga", "amigo", "señor", "chico"]),
     ],
-    "Animals": [
-        ("Complete the sentence", "El ___ nada en el agua.", "pez", ["pez", "perro", "pájaro", "caballo"]),
-        ("Complete the sentence", "El ___ vive en la granja.", "caballo", ["caballo", "gato", "león", "oso"]),
-        ("Complete the sentence", "El ___ es el rey de la selva.", "león", ["león", "conejo", "ratón", "oveja"]),
+    "greet_bye": [
+        ("Complete the farewell", "___, nos vemos mañana.", "Adiós", ["Adiós", "Hola", "Gracias", "Bien"]),
+        ("Complete the farewell", "Hasta ___.", "luego", ["luego", "gusto", "favor", "poco"]),
+        ("Complete the sentence", "Que tengas un buen ___.", "día", ["día", "viaje", "nombre", "país"]),
     ],
-    "Family": [
-        ("Complete the sentence", "Ella es mi ___.", "hermana", ["hermana", "hermano", "perro", "gato"]),
-        ("Complete the sentence", "Mi ___ tiene ochenta años.", "abuelo", ["abuelo", "primo", "hijo", "tío"]),
-        ("Complete the sentence", "Toda mi ___ viene a cenar.", "familia", ["familia", "hija", "tía", "prima"]),
+    "greet_howareyou": [
+        ("Complete the sentence", "Hoy estoy muy ___.", "bien", ["bien", "poco", "hoy", "pero"]),
+        ("Complete the sentence", "Tengo ___ y quiero agua.", "sed", ["sed", "hambre", "mucho", "ahora"]),
+        ("Complete the sentence", "Estoy ___ porque trabajé mucho.", "cansado", ["cansado", "feliz", "triste", "bien"]),
     ],
-    "Colors": [
-        ("Complete the sentence", "El cielo es ___.", "azul", ["azul", "rojo", "negro", "verde"]),
-        ("Complete the sentence", "La sangre es de color ___.", "rojo", ["rojo", "amarillo", "blanco", "gris"]),
-        ("Complete the sentence", "La nieve es ___.", "blanco", ["blanco", "negro", "marrón", "morado"]),
+    "from_country": [
+        ("Complete the sentence", "___ de México.", "Soy", ["Soy", "Eres", "Vivo", "Hablo"]),
+        ("Complete the question", "¿De dónde ___?", "eres", ["eres", "soy", "vives", "hablas"]),
+        ("Complete the sentence", "España es un ___ bonito.", "país", ["país", "mundo", "barrio", "idioma"]),
     ],
-    "Travel": [
-        ("Complete the sentence", "Necesito mi ___ para viajar.", "pasaporte", ["pasaporte", "libro", "perro", "café"]),
-        ("Complete the sentence", "Compramos el ___ para el tren.", "boleto", ["boleto", "mapa", "taxi", "hotel"]),
-        ("Complete the sentence", "Vamos a la ___ para nadar.", "playa", ["playa", "estación", "maleta", "ciudad"]),
+    "from_language": [
+        ("Complete the sentence", "___ español un poco.", "Hablo", ["Hablo", "Vivo", "Tengo", "Soy"]),
+        ("Complete the sentence", "El ___ no es difícil.", "español", ["español", "inglés", "libro", "país"]),
+        ("Complete the sentence", "Más ___, por favor.", "despacio", ["despacio", "fácil", "otra", "poco"]),
+    ],
+    "from_living": [
+        ("Complete the sentence", "___ en una ciudad grande.", "Vivo", ["Vivo", "Soy", "Hablo", "Tengo"]),
+        ("Complete the sentence", "Mi ___ está cerca.", "casa", ["casa", "calle", "pueblo", "barrio"]),
+        ("Complete the question", "¿Dónde ___ tú?", "vives", ["vives", "eres", "hablas", "tengo"]),
+    ],
+    "from_about": [
+        ("Complete the sentence", "___ un perro y un gato.", "Tengo", ["Tengo", "Soy", "Vivo", "Hablo"]),
+        ("Complete the sentence", "Mi ___ se llama Ana.", "mamá", ["mamá", "papá", "libro", "gato"]),
+        ("Complete the sentence", "Me ___ el café.", "gusta", ["gusta", "tengo", "hablo", "vivo"]),
     ],
 }
 
 EXERCISE_TYPES = ["mc", "translate", "type_answer", "fill_blank", "match"]
+
+# Prompt phrasings lifted from the real app's exercise headers, so the lesson
+# player reads like Duolingo rather than like a generic quiz.
+MC_ES_OPTION_PROMPTS = ['Which one of these is "{en}"?', 'How do you say "{en}"?']
 
 
 def _build_exercise(etype, vocab, sentences, used_in_lesson, rng):
@@ -122,39 +206,51 @@ def _build_exercise(etype, vocab, sentences, used_in_lesson, rng):
         candidates = [v for v in vocab if v[0] not in used_in_lesson] or vocab
         es, en = rng.choice(candidates)
         used_in_lesson.add(es)
-        distractor_pool = [v[1] for v in vocab if v[1] != en]
-        options = rng.sample(distractor_pool, min(3, len(distractor_pool))) + [en]
+        # Real Duolingo asks in English and offers Spanish choices (see the
+        # "Which one of these is 'coffee'?" / "How do you say 'water'?" cards),
+        # so the options are the Spanish side, not the English side.
+        distractor_pool = [v[0] for v in vocab if v[0] != es]
+        options = rng.sample(distractor_pool, min(2, len(distractor_pool))) + [es]
         rng.shuffle(options)
-        return mc(f"'{es}' means?", options, en)
+        return mc(rng.choice(MC_ES_OPTION_PROMPTS).format(en=en), options, es)
 
     if etype == "translate":
         candidates = [v for v in vocab if v[0] not in used_in_lesson] or vocab
         es, en = rng.choice(candidates)
         used_in_lesson.add(es)
-        words = es.split(" ")
-        distractor_pool = [w for v in vocab if v[0] != es for w in v[0].split(" ") if w not in words]
+        # Alternate direction like the real app ("Write this in English" over a
+        # Spanish phrase, and vice versa).
+        to_english = rng.random() < 0.5
+        source, answer = (es, en) if to_english else (en, es)
+        side = 0 if to_english else 1  # which side of the pool distractors come from
+        words = answer.split(" ")
+        distractor_pool = [
+            w for v in vocab if v[side] != answer for w in v[side].split(" ") if w not in words
+        ]
         word_bank = words + rng.sample(distractor_pool, min(2, len(distractor_pool)))
         rng.shuffle(word_bank)
-        return translate(f"Translate: '{en}'", word_bank, es)
+        prompt = "Write this in English" if to_english else "Write this in Spanish"
+        return translate(f"{prompt}: {source}", word_bank, answer)
 
     if etype == "type_answer":
         candidates = [v for v in vocab if v[0] not in used_in_lesson] or vocab
         es, en = rng.choice(candidates)
         used_in_lesson.add(es)
-        return type_answer(f"Type the Spanish word for '{en}'", es, hint=en)
+        return type_answer(f'Type this in Spanish: "{en}"', es, hint=en)
 
     if etype == "fill_blank":
         prompt, sentence, answer, options = rng.choice(sentences)
         return fill_blank(prompt, sentence, options, answer)
 
-    # match — needs 3 distinct pairs
+    # match — the real app shows five pairs side by side
+    pair_count = 5
     candidates = [v for v in vocab if v[0] not in used_in_lesson]
-    if len(candidates) < 3:
+    if len(candidates) < pair_count:
         candidates = vocab
-    chosen = rng.sample(candidates, 3)
+    chosen = rng.sample(candidates, pair_count)
     for es, _ in chosen:
         used_in_lesson.add(es)
-    return match("Match the words to their meanings", dict(chosen))
+    return match("Select the matching pairs", dict(chosen))
 
 
 def build_lessons(topic, rng, lesson_count=None):
@@ -185,21 +281,35 @@ def build_lessons(topic, rng, lesson_count=None):
 # content every time (stable for demoing/grading, not reshuffled per run).
 _rng = random.Random(20240613)
 
+# Unit titles/order/colors mirror the real Spanish course's Section 1. Each
+# skill below is one *node* on the path (real Duolingo calls the popup's
+# "Lesson 2 of 4" counter against this node's lesson list).
 UNITS = [
     {
-        "title": "Unit 1: Basics", "description": "Greetings, food, and animals", "color_theme": "duo-green",
+        "title": "Section 1, Unit 1", "description": "Order at a café", "color_theme": "duo-green",
         "skills": [
-            {"title": "Greetings", "icon": "hand-wave", "lessons": build_lessons("Greetings", _rng)},
-            {"title": "Food", "icon": "utensils", "lessons": build_lessons("Food", _rng)},
-            {"title": "Animals", "icon": "paw", "lessons": build_lessons("Animals", _rng)},
+            {"title": "Order drinks", "icon": "coffee", "lessons": build_lessons("cafe_drinks", _rng)},
+            {"title": "Order food", "icon": "utensils", "lessons": build_lessons("cafe_food", _rng)},
+            {"title": "Be polite", "icon": "hand-wave", "lessons": build_lessons("cafe_polite", _rng)},
+            {"title": "At the table", "icon": "table", "lessons": build_lessons("cafe_table", _rng)},
         ],
     },
     {
-        "title": "Unit 2: Everyday Life", "description": "Family, colors, and travel", "color_theme": "duo-blue",
+        "title": "Section 1, Unit 2", "description": "Greet people and say goodbye", "color_theme": "duo-purple",
         "skills": [
-            {"title": "Family", "icon": "home-heart", "lessons": build_lessons("Family", _rng)},
-            {"title": "Colors", "icon": "palette", "lessons": build_lessons("Colors", _rng)},
-            {"title": "Travel", "icon": "plane", "lessons": build_lessons("Travel", _rng)},
+            {"title": "Say hello", "icon": "hand-wave", "lessons": build_lessons("greet_hello", _rng)},
+            {"title": "Share your name", "icon": "user", "lessons": build_lessons("greet_names", _rng)},
+            {"title": "Say goodbye", "icon": "message", "lessons": build_lessons("greet_bye", _rng)},
+            {"title": "Ask how it's going", "icon": "smile", "lessons": build_lessons("greet_howareyou", _rng)},
+        ],
+    },
+    {
+        "title": "Section 1, Unit 3", "description": "Say where you are from", "color_theme": "duo-teal",
+        "skills": [
+            {"title": "Your country", "icon": "globe", "lessons": build_lessons("from_country", _rng)},
+            {"title": "Languages", "icon": "languages", "lessons": build_lessons("from_language", _rng)},
+            {"title": "Where you live", "icon": "home-heart", "lessons": build_lessons("from_living", _rng)},
+            {"title": "About you", "icon": "user", "lessons": build_lessons("from_about", _rng)},
         ],
     },
 ]
@@ -274,18 +384,19 @@ def seed():
         db.flush()
 
         skills = db.query(models.Skill).join(models.Unit).order_by(models.Unit.order_index, models.Skill.order_index).all()
-        # Greetings + Food: completed with 1 crown. Animals: unlocked, one lesson in. Rest: locked.
-        seed_progress = [
-            (skills[0].id, "completed", 1, 0),  # Greetings
-            (skills[1].id, "completed", 1, 0),  # Food
-            (skills[2].id, "available", 0, 1),  # Animals — in progress
-            (skills[3].id, "locked", 0, 0),     # Family
-            (skills[4].id, "locked", 0, 0),     # Colors
-            (skills[5].id, "locked", 0, 0),     # Travel
-        ]
-        for skill_id, status, crowns, lessons_completed in seed_progress:
+        # Mirrors the real app's opening state: the first node of Unit 1 is
+        # finished, the second is the "current" one part-way through (so the
+        # Start bubble + partial progress ring both have something to show),
+        # everything after that is still locked.
+        for index, skill in enumerate(skills):
+            if index == 0:
+                status, crowns, lessons_completed = "completed", 1, 0
+            elif index == 1:
+                status, crowns, lessons_completed = "available", 0, 1
+            else:
+                status, crowns, lessons_completed = "locked", 0, 0
             db.add(models.UserSkillProgress(
-                user_id=learner.id, skill_id=skill_id, status=status,
+                user_id=learner.id, skill_id=skill.id, status=status,
                 crowns=crowns, lessons_completed=lessons_completed,
             ))
 

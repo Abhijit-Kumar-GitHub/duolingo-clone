@@ -35,7 +35,7 @@ export interface User {
 export interface SkillNode {
   id: number; title: string; icon_name: string; order_index: number;
   status: "locked" | "available" | "completed";
-  crowns: number; total_lessons: number; lessons_completed: number;
+  crowns: number; total_lessons: number; lessons_completed: number; xp_reward: number;
 }
 
 export interface Unit {
@@ -87,16 +87,17 @@ export const api = {
     request<AnswerCheckResult>("/api/lesson/check-answer", {
       method: "POST", body: JSON.stringify({ exercise_id: exerciseId, answer }),
     }),
-  completeLesson: (lessonId: number, correctCount: number, totalExercises: number, heartsRemaining: number) =>
+  completeLesson: (lessonId: number, correctCount: number, totalExercises: number, heartsRemaining: number, practice = false) =>
     request<LessonCompleteResult>("/api/lesson/complete", {
       method: "POST",
       body: JSON.stringify({
         lesson_id: lessonId, correct_count: correctCount,
-        total_exercises: totalExercises, hearts_remaining: heartsRemaining,
+        total_exercises: totalExercises, hearts_remaining: heartsRemaining, practice,
       }),
     }),
   getHearts: () => request<HeartsResponse>("/api/hearts"),
   refillHearts: () => request<HeartsResponse>("/api/hearts/refill", { method: "POST" }),
+  devFillHearts: () => request<HeartsResponse>("/api/hearts/dev-fill", { method: "POST" }),
   getLeaderboard: () => request<LeaderboardEntry[]>("/api/leaderboard"),
   getProfile: () => request<Profile>("/api/profile"),
 };

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { X, Heart } from "lucide-react";
 import { useLessonStore } from "@/store/useLessonStore";
 import { useUserStore } from "@/store/useUserStore";
@@ -24,6 +24,9 @@ const EXERCISE_COMPONENTS: Record<string, any> = {
 
 export function LessonPlayer({ skillId }: { skillId: number }) {
   const router = useRouter();
+  // ?practice=1 comes from a finished node's Practice button (PathMap) —
+  // same lesson flow, but the backend halves the XP and leaves crowns alone.
+  const isPractice = useSearchParams().get("practice") === "1";
   const user = useUserStore((s) => s.user);
   const fetchUser = useUserStore((s) => s.fetchUser);
   const {
@@ -36,10 +39,10 @@ export function LessonPlayer({ skillId }: { skillId: number }) {
 
   useEffect(() => {
     if (!user) { fetchUser(); return; }
-    loadLesson(skillId, user.hearts);
+    loadLesson(skillId, user.hearts, isPractice);
     return () => reset();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, skillId]);
+  }, [user?.id, skillId, isPractice]);
 
   useEffect(() => {
     // keep the top-bar heart count in sync as soon as the lesson mutates it

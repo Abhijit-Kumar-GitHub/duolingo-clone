@@ -62,6 +62,7 @@ def read_path(user: models.User = Depends(current_user), db: Session = Depends(g
                 crowns=p.crowns if p else 0,
                 total_lessons=total_lessons,
                 lessons_completed=p.lessons_completed if p else 0,
+                xp_reward=s.lessons[0].xp_reward if s.lessons else 10,
             ))
         out_units.append(schemas.UnitOut(
             id=u.id, title=u.title, description=u.description, order_index=u.order_index,
@@ -105,6 +106,7 @@ def finish_lesson(payload: schemas.LessonCompleteIn, user: models.User = Depends
         raise HTTPException(404, "Lesson not found")
     result = crud.complete_lesson(
         db, user, lesson, payload.correct_count, payload.total_exercises, payload.hearts_remaining,
+        practice=payload.practice,
     )
     crud.evaluate_achievements(db, user)
     return schemas.LessonCompleteOut(**result)
@@ -125,6 +127,13 @@ def refill_hearts(user: models.User = Depends(current_user), db: Session = Depen
     user, success = crud.refill_hearts(db, user)
     if not success:
         raise HTTPException(400, "Not enough gems or hearts already full")
+    return schemas.HeartsOut(hearts=user.hearts, max_hearts=user.max_hearts, gems=user.gems, next_heart_in_seconds=None)
+
+
+@router.post("/hearts/dev-fill", response_model=schemas.HeartsOut)
+def dev_fill_hearts(user: models.User = Depends(current_user), db: Session = Depends(get_db)):
+    """Dev-only: free instant heart top-up, no gem cost — see Practice page's dev tools."""
+    user = crud.dev_fill_hearts(db, user)
     return schemas.HeartsOut(hearts=user.hearts, max_hearts=user.max_hearts, gems=user.gems, next_heart_in_seconds=None)
 
 

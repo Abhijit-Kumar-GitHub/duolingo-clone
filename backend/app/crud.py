@@ -81,13 +81,29 @@ def refill_hearts(db: Session, user: models.User, cost_gems: int = 350) -> tuple
     return user, True
 
 
+def dev_fill_hearts(db: Session, user: models.User) -> models.User:
+    """Dev-only helper: instantly tops up hearts for free, no gem cost —
+    distinct from refill_hearts (the real gem-purchase mechanic) so testing
+    heart-loss/lesson flows doesn't require draining the mocked gem balance."""
+    user.hearts = user.max_hearts
+    user.last_heart_lost_at = None
+    db.commit()
+    db.refresh(user)
+    return user
+
+
 def simulate_day_passing(db: Session, user: models.User) -> models.User:
     """Dev-only helper: rolls the user's last_active_date back a day so
-    streak-break / streak-continue logic can be demoed without waiting."""
+    streak-break / streak-continue logic can be demoed without waiting. Also
+    tops up hearts, since a full day is far longer than the 30-min regen
+    period — a real day passing would always leave hearts full regardless of
+    how many were lost the day before."""
     if user.last_active_date:
         user.last_active_date -= timedelta(days=1)
     else:
         user.last_active_date = date.today() - timedelta(days=1)
+    user.hearts = user.max_hearts
+    user.last_heart_lost_at = None
     db.commit()
     db.refresh(user)
     return user
@@ -142,9 +158,20 @@ def complete_lesson(
     correct_count: int,
     total_exercises: int,
     hearts_remaining: int,
+    practice: bool = False,
 ) -> dict:
+    """Finalizes a lesson attempt.
+
+    `practice` is a replay of an already-finished node (real Duolingo's
+    "PRACTICE +5 XP" button): it still earns XP, logs a completion and feeds
+    the streak, but at half rate and *without* touching crown/unlock
+    progression — you can't grind a finished node to advance the path.
+    """
     accuracy = int(round(100 * correct_count / max(total_exercises, 1)))
-    xp_earned = lesson.xp_reward + (5 if accuracy == 100 else 0)  # small perfect-lesson bonus
+    if practice:
+        xp_earned = max(1, lesson.xp_reward // 2)
+    else:
+        xp_earned = lesson.xp_reward + (5 if accuracy == 100 else 0)  # small perfect-lesson bonus
 
     # 1) log the completion (history)
     db.add(models.UserLessonCompletion(
@@ -171,19 +198,20 @@ def complete_lesson(
         user.longest_streak = max(user.longest_streak, user.streak)
         user.last_active_date = today
 
-    # 4) skill progress + crowns
+    # 4) skill progress + crowns (skipped entirely for practice replays)
     progress = get_or_create_progress(db, user.id, lesson.skill_id)
-    progress.lessons_completed += 1
-    total_lessons_in_skill = db.query(models.Lesson).filter_by(skill_id=lesson.skill_id).count()
-    # Only the lesson that actually finishes the skill's full lesson list
-    # earns a crown / flips status to "completed" — earlier lessons in a
-    # multi-lesson skill must leave status as "available" so the path still
-    # shows an accurate mix of done/current/upcoming nodes for it.
-    if progress.lessons_completed >= total_lessons_in_skill:
-        progress.status = "completed"
-        if progress.crowns < 5:
-            progress.crowns += 1
-            progress.lessons_completed = 0  # reset the ring for the next crown level
+    if not practice:
+        progress.lessons_completed += 1
+        total_lessons_in_skill = db.query(models.Lesson).filter_by(skill_id=lesson.skill_id).count()
+        # Only the lesson that actually finishes the skill's full lesson list
+        # earns a crown / flips status to "completed" — earlier lessons in a
+        # multi-lesson skill must leave status as "available" so the path still
+        # shows an accurate mix of done/current/upcoming nodes for it.
+        if progress.lessons_completed >= total_lessons_in_skill:
+            progress.status = "completed"
+            if progress.crowns < 5:
+                progress.crowns += 1
+                progress.lessons_completed = 0  # reset the ring for the next crown level
 
     # 5) unlock the next skill in order — only once *this* skill is fully
     # done (all its lessons), never on an earlier lesson within it. Doing
@@ -192,7 +220,7 @@ def complete_lesson(
     # once: the very first lesson of a multi-lesson skill was unlocking the
     # next skill immediately, before the current one was actually finished.
     next_unlocked_title = None
-    if progress.status == "completed":
+    if not practice and progress.status == "completed":
         skill = db.get(models.Skill, lesson.skill_id)
         next_skill = (
             db.query(models.Skill)

@@ -1,22 +1,29 @@
 "use client";
 
-import { Check, SkipForward } from "lucide-react";
+import { ReactNode } from "react";
+import { Check, SkipForward, Archive, Trophy } from "lucide-react";
 import clsx from "clsx";
 import { GlossyBadge, GlossyColor } from "./GlossyBadge";
 import { JumpAheadBubble } from "./JumpAheadBubble";
 
 export type NodeStatus = "done" | "current" | "upcoming" | "locked";
+// Real Duolingo mixes two decorative stops into each unit's node run: a
+// treasure chest partway through and a trophy at the very end. Neither is a
+// lesson — they're inert milestones, so they never open a popup.
+export type NodeKind = "lesson" | "chest" | "trophy";
 
 const COLOR_MAP: Record<string, GlossyColor> = {
   "duo-green": "green",
   "duo-blue": "blue",
+  "duo-purple": "purple",
+  "duo-teal": "teal",
 };
 
-// Hex twins of the two colors above, for the conic-gradient progress ring
+// Hex twins of the colors above, for the conic-gradient progress ring
 // (which needs real color values, not Tailwind utility classes).
 const RING_COLOR: Record<GlossyColor, string> = {
   green: "#58CC02", blue: "#1CB0F6", red: "#FF4B4B", yellow: "#FFC800",
-  purple: "#CE82FF", fox: "#FF9600", grey: "#AFAFAF",
+  purple: "#CE82FF", teal: "#00CD9C", fox: "#FF9600", grey: "#AFAFAF",
 };
 
 // One node = one lesson stop on the path, rendered as a GlossyBadge coin
@@ -24,19 +31,21 @@ const RING_COLOR: Record<GlossyColor, string> = {
 // GlossyBadge.tsx). Real Duolingo's discs stay grey/monochrome — with a
 // generic filler icon — until you actually reach them; only the checkmark
 // (done) or the lesson's own icon (current) breaks the grey. Locked and
-// not-yet-reached nodes are deliberately inert (no onClick) — only the
-// single "current" node per skill is clickable, plus "done" nodes (tapping
-// a finished skill replays it, same as real Duolingo).
+// not-yet-reached nodes are deliberately inert (no onClick, no popup) —
+// only the single "current" node per skill opens its Start panel, plus
+// "done" nodes (which open the Practice/Legendary panel instead).
 export function PathNode({
-  status, icon: Icon, colorTheme, offset, clickable, onClick, label, showJump, jumpTarget, progressPct = 0,
+  status, icon: Icon, colorTheme, offset, clickable, onActivate, label,
+  kind = "lesson", showJump, jumpTarget, progressPct = 0, popover,
 }: {
   status: NodeStatus;
   icon: any;
   colorTheme: string;
   offset: number;
   clickable: boolean;
-  onClick?: () => void;
+  onActivate?: () => void;
   label?: string;
+  kind?: NodeKind;
   // The first node of a not-yet-started unit gets a "Jump here?" bubble
   // above it (real Duolingo's placement test entry point), rendered in
   // this unit's color instead of the usual muted grey.
@@ -46,14 +55,34 @@ export function PathNode({
   // as a partial ring, only meaningful on the "current" node (the only
   // one with any in-progress state to show).
   progressPct?: number;
+  // The open Start / Practice panel for this node, if it's the open one.
+  popover?: ReactNode;
 }) {
   const color = COLOR_MAP[colorTheme] ?? "green";
   const lit = status === "done" || status === "current" || jumpTarget;
   const ringPct = Math.max(0, Math.min(1, progressPct));
 
+  const NodeIcon =
+    kind === "chest" ? Archive
+    : kind === "trophy" ? Trophy
+    : status === "done" ? Check
+    : jumpTarget ? SkipForward
+    : Icon;
+
+  // A Start / Jump bubble floats ~44px above the disc, which would otherwise
+  // land on top of the node (or unit divider) directly above it — so any node
+  // carrying one claims that vertical room for itself.
+  const hasBubbleAbove = showJump || (status === "current" && kind === "lesson" && !popover);
+
   return (
-    <div className="relative flex justify-center" style={{ transform: `translateX(${offset}px)` }}>
-      {status === "current" && (
+    <div
+      className={clsx("relative flex justify-center", hasBubbleAbove && "mt-10")}
+      // Each node's translateX makes it its own stacking context, so a later
+      // sibling would paint over an open panel no matter how high the panel's
+      // own z-index is — the whole node has to be lifted instead.
+      style={{ transform: `translateX(${offset}px)`, zIndex: popover ? 40 : undefined }}
+    >
+      {status === "current" && kind === "lesson" && !popover && (
         <div className="absolute -top-11 left-1/2 -translate-x-1/2 bg-white border-2 border-duo-swan text-duo-green font-extrabold text-xs uppercase tracking-wide px-4 py-1.5 rounded-xl shadow-duo-card animate-bounce-in whitespace-nowrap">
           Start
           <div className="absolute left-1/2 -translate-x-1/2 -bottom-[7px] w-3 h-3 bg-white border-r-2 border-b-2 border-duo-swan rotate-45" />
@@ -62,16 +91,17 @@ export function PathNode({
       {showJump && <JumpAheadBubble color={color} />}
 
       <button
-        onClick={clickable ? onClick : undefined}
+        onClick={clickable ? onActivate : undefined}
         disabled={!clickable}
         aria-label={label}
+        aria-expanded={popover ? true : undefined}
         className={clsx(
           "relative transition-transform",
           clickable && "active:translate-y-1",
           status === "current" && "animate-pop-in"
         )}
       >
-        {status === "current" && (
+        {status === "current" && kind === "lesson" && (
           ringPct > 0 ? (
             // Sized bigger than the badge (not inset-x-0 / matching height)
             // so the ring's outer band sits outside the badge's own circle
@@ -96,12 +126,14 @@ export function PathNode({
           size="xl"
           color={color}
           muted={!lit}
-          icon={status === "done" ? Check : jumpTarget ? SkipForward : Icon}
-          iconSize={status === "done" ? 25 : 23}
-          strokeWidth={status === "done" ? 3.5 : 2.2}
+          icon={NodeIcon}
+          iconSize={status === "done" && kind === "lesson" ? 25 : 23}
+          strokeWidth={status === "done" && kind === "lesson" ? 3.5 : 2.2}
           pressable={clickable}
         />
       </button>
+
+      {popover}
     </div>
   );
 }

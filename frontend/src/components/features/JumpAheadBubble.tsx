@@ -7,6 +7,8 @@ import clsx from "clsx";
 const COLOR_CLASSES: Record<string, string> = {
   green: "border-duo-green text-duo-green",
   blue: "border-duo-blue text-duo-blue",
+  purple: "border-duo-purple text-duo-purple",
+  teal: "border-duo-teal text-duo-teal",
 };
 
 // Real Duolingo lets you "test out" of a not-yet-started unit ahead via a

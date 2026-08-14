@@ -44,6 +44,7 @@ class SkillNodeOut(BaseModel):
     crowns: int
     total_lessons: int
     lessons_completed: int
+    xp_reward: int       # XP for one lesson of this skill — drives the node popup's "+N XP"
 
 
 class UnitOut(BaseModel):
@@ -94,6 +95,7 @@ class LessonCompleteIn(BaseModel):
     correct_count: int
     total_exercises: int
     hearts_remaining: int
+    practice: bool = False  # replay of a finished node: half XP, no crown/unlock progress
 
 
 class LessonCompleteOut(BaseModel):
