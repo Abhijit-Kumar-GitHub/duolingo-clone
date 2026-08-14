@@ -81,12 +81,14 @@ def refill_hearts(db: Session, user: models.User, cost_gems: int = 350) -> tuple
     return user, True
 
 
-def dev_fill_hearts(db: Session, user: models.User) -> models.User:
-    """Dev-only helper: instantly tops up hearts for free, no gem cost —
-    distinct from refill_hearts (the real gem-purchase mechanic) so testing
-    heart-loss/lesson flows doesn't require draining the mocked gem balance."""
+def dev_fill_hearts(db: Session, user: models.User, bonus_gems: int = 1000) -> models.User:
+    """Dev-only helper: instantly tops up hearts for free and tops up gems
+    too, so testing gem-spending features (real refill, shop) doesn't run
+    the mocked balance dry — distinct from refill_hearts, the real
+    gem-purchase mechanic that actually costs gems."""
     user.hearts = user.max_hearts
     user.last_heart_lost_at = None
+    user.gems += bonus_gems
     db.commit()
     db.refresh(user)
     return user

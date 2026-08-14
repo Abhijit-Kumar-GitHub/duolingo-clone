@@ -28,7 +28,7 @@ export function StatsBar() {
 
   return (
     <div className="flex items-center gap-6 justify-end w-full max-w-3xl mx-auto px-4 py-4">
-      <CoursePopover />
+      <CoursePopover level={Math.floor(user.total_xp / 50) + 1} />
       <StreakPopover streak={user.streak} />
       <GemsPopover gems={user.gems} />
       <HeartsPopover hearts={user.hearts} maxHearts={user.max_hearts} onChange={fetchUser} />

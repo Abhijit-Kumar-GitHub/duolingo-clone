@@ -29,7 +29,7 @@ export default function PracticePage() {
           onClick={async () => { await api.devFillHearts().catch(() => {}); fetchUser(); }}
           className="btn-duo-outline w-full flex items-center justify-center gap-2"
         >
-          <Heart size={16} /> Fill hearts instantly (free, dev-only)
+          <Heart size={16} /> Fill hearts + 1000 gems (free, dev-only)
         </button>
         <button
           onClick={async () => { await api.refillHearts().catch(() => {}); fetchUser(); }}

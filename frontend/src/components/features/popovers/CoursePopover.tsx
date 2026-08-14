@@ -16,7 +16,7 @@ const AVAILABLE_COURSES = [
   { flag: "🇮🇹", name: "Italian" },
 ];
 
-export function CoursePopover() {
+export function CoursePopover({ level }: { level: number }) {
   const [adding, setAdding] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
 
@@ -26,7 +26,15 @@ export function CoursePopover() {
   };
 
   return (
-    <Popover align="left" trigger={<span className="text-xl leading-none">{CURRENT_COURSE.flag}</span>}>
+    <Popover
+      align="left"
+      trigger={
+        <span className="flex items-center gap-1.5 font-extrabold text-duo-eel">
+          <span className="text-xl leading-none">{CURRENT_COURSE.flag}</span>
+          {level}
+        </span>
+      }
+    >
       <PopoverPanel className="w-72">
         <p className="text-xs font-extrabold uppercase tracking-wide text-duo-hare mb-3">
           {adding ? "Add a new course" : "My courses"}
