@@ -132,6 +132,90 @@ def get_or_create_progress(db: Session, user_id: int, skill_id: int) -> models.U
     return row
 
 
+# ---------- Checkpoint (treasure chest) ----------
+# A unit with >=2 skills has exactly one checkpoint, sitting roughly halfway
+# through it — ceil(N/2) skills before, the rest after (matches the chest's
+# position on the path — see PathMap.tsx's buildEntries). Clearing every
+# skill before it makes it tappable; tapping pays out a random gem reward
+# and unlocks the *first* skill after it — that one skill doesn't unlock
+# automatically the way its neighbors do, though everything past it goes
+# back to unlocking normally, one completion at a time.
+
+def get_or_create_checkpoint(db: Session, user_id: int, unit_id: int) -> models.UserUnitCheckpoint:
+    row = db.get(models.UserUnitCheckpoint, (user_id, unit_id))
+    if row is None:
+        row = models.UserUnitCheckpoint(user_id=user_id, unit_id=unit_id, opened=False)
+        db.add(row)
+        db.commit()
+        db.refresh(row)
+    return row
+
+
+def checkpoint_gate_index(db: Session, unit_id: int) -> int | None:
+    """Order-index of the first skill *after* the checkpoint (the one
+    opening it unlocks), or None if the unit has fewer than 2 skills and so
+    has no checkpoint at all."""
+    total = db.query(models.Skill).filter_by(unit_id=unit_id).count()
+    if total < 2:
+        return None
+    return (total + 1) // 2  # ceil(total / 2) skills sit before the chest
+
+
+def checkpoint_prerequisites_met(db: Session, user_id: int, unit_id: int) -> bool:
+    """The path is a strictly linear chain — skill N+1 only ever unlocks once
+    skill N is completed — so checking that the *one* skill immediately
+    before the chest is done is equivalent to checking every skill before it
+    (each of those was itself a precondition for this one unlocking at all).
+    No need to walk the whole prefix."""
+    gate_index = checkpoint_gate_index(db, unit_id)
+    if gate_index is None:
+        return False
+    prior_skill = (
+        db.query(models.Skill)
+        .filter(models.Skill.unit_id == unit_id, models.Skill.order_index == gate_index - 1)
+        .first()
+    )
+    if prior_skill is None:
+        return False
+    progress = db.get(models.UserSkillProgress, (user_id, prior_skill.id))
+    return progress is not None and progress.status == "completed"
+
+
+def open_checkpoint(db: Session, user: models.User, unit_id: int) -> dict | None:
+    """Returns None if the checkpoint doesn't exist, is already opened, or
+    its prerequisite skills aren't all completed yet (also guards against a
+    direct API call jumping the gate)."""
+    gate_index = checkpoint_gate_index(db, unit_id)
+    if gate_index is None:
+        return None
+    checkpoint = get_or_create_checkpoint(db, user.id, unit_id)
+    if checkpoint.opened:
+        return None
+    if not checkpoint_prerequisites_met(db, user.id, unit_id):
+        return None
+
+    gems_earned = random.randint(500, 1000)
+    user.gems += gems_earned
+    checkpoint.opened = True
+    checkpoint.opened_at = datetime.utcnow()
+
+    next_unlocked_title = None
+    gated_skill = (
+        db.query(models.Skill)
+        .filter(models.Skill.unit_id == unit_id, models.Skill.order_index == gate_index)
+        .first()
+    )
+    if gated_skill:
+        gated_progress = get_or_create_progress(db, user.id, gated_skill.id)
+        if gated_progress.status == "locked":
+            gated_progress.status = "available"
+            next_unlocked_title = gated_skill.title
+
+    db.commit()
+    db.refresh(user)
+    return {"gems_earned": gems_earned, "total_gems": user.gems, "next_skill_unlocked": next_unlocked_title}
+
+
 # ---------- Lesson ----------
 
 def get_next_lesson_for_skill(db: Session, skill_id: int, lessons_completed: int = 0) -> models.Lesson | None:
@@ -221,23 +305,30 @@ def complete_lesson(
     # skills showing as "current" (with two overlapping Start bubbles) at
     # once: the very first lesson of a multi-lesson skill was unlocking the
     # next skill immediately, before the current one was actually finished.
+    #
+    # Exception: the skill immediately before a checkpoint (the treasure
+    # chest) does NOT auto-unlock the one after it — that unlock only
+    # happens when the checkpoint itself is opened (see open_checkpoint).
     next_unlocked_title = None
     if not practice and progress.status == "completed":
         skill = db.get(models.Skill, lesson.skill_id)
-        next_skill = (
-            db.query(models.Skill)
-            .filter(models.Skill.unit_id == skill.unit_id, models.Skill.order_index == skill.order_index + 1)
-            .first()
-        )
-        if next_skill is None:
-            next_unit = db.query(models.Unit).filter(models.Unit.order_index == db.get(models.Unit, skill.unit_id).order_index + 1).first()
-            if next_unit:
-                next_skill = db.query(models.Skill).filter_by(unit_id=next_unit.id).order_by(models.Skill.order_index).first()
-        if next_skill:
-            next_progress = get_or_create_progress(db, user.id, next_skill.id)
-            if next_progress.status == "locked":
-                next_progress.status = "available"
-                next_unlocked_title = next_skill.title
+        gate_index = checkpoint_gate_index(db, skill.unit_id)
+        gated_by_checkpoint = gate_index is not None and skill.order_index == gate_index - 1
+        if not gated_by_checkpoint:
+            next_skill = (
+                db.query(models.Skill)
+                .filter(models.Skill.unit_id == skill.unit_id, models.Skill.order_index == skill.order_index + 1)
+                .first()
+            )
+            if next_skill is None:
+                next_unit = db.query(models.Unit).filter(models.Unit.order_index == db.get(models.Unit, skill.unit_id).order_index + 1).first()
+                if next_unit:
+                    next_skill = db.query(models.Skill).filter_by(unit_id=next_unit.id).order_by(models.Skill.order_index).first()
+            if next_skill:
+                next_progress = get_or_create_progress(db, user.id, next_skill.id)
+                if next_progress.status == "locked":
+                    next_progress.status = "available"
+                    next_unlocked_title = next_skill.title
 
     db.commit()
     db.refresh(user)

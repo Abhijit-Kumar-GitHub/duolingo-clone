@@ -3,14 +3,15 @@
 import { useEffect, useRef, useState } from "react";
 import {
   Coffee, UtensilsCrossed, Hand, Table, User, Users, Smile, Globe, Languages,
-  MessageCircle, Star,
+  MessageCircle, Star, Gem,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { PathResponse, SkillNode, Unit } from "@/lib/api";
-import { PathNode, NodeStatus, NodeKind } from "./PathNode";
+import { api, Checkpoint, PathResponse, SkillNode, Unit } from "@/lib/api";
+import { PathNode, NodeStatus } from "./PathNode";
 import { NodePopover, NodePopoverMode } from "./NodePopover";
 import { GuidebookButton } from "./GuidebookButton";
 import { GlossyColor } from "./GlossyBadge";
+import { useUserStore } from "@/store/useUserStore";
 
 // Classic Duolingo "snake" offsets — repeats every 8 nodes, alternating
 // left and right (measured off the real path: amplitude ~70px, swinging
@@ -51,11 +52,13 @@ const TOPIC_ICONS: Record<string, any> = {
 
 // One entry = one circular stop on the path. A "lesson" node maps 1:1 to a
 // skill (real Duolingo's node popup counts "Lesson 2 of 4" *within* the
-// node, which is exactly a skill's lesson list); chest and trophy are inert
-// milestone stops the real path mixes in.
+// node, which is exactly a skill's lesson list); trophy is a purely
+// decorative end-of-unit marker, but the chest is a real checkpoint — see
+// handleOpenChest below.
 type Entry =
   | { kind: "lesson"; skill: SkillNode; status: NodeStatus }
-  | { kind: "chest" | "trophy" };
+  | { kind: "chest"; checkpoint: Checkpoint | null }
+  | { kind: "trophy" };
 
 function buildEntries(unit: Unit): Entry[] {
   const lessons: Entry[] = unit.skills.map((skill) => ({
@@ -66,22 +69,49 @@ function buildEntries(unit: Unit): Entry[] {
       : skill.status === "available" ? "current"
       : "locked",
   }));
-  // Chest sits just before the unit's final node, trophy caps the unit —
-  // giving the 4-skill units the same 6-stop shape as the real app's.
+  // Chest sits roughly halfway through the unit — ceil(N/2) skills before
+  // it, the rest after — matching crud.checkpoint_gate_index on the backend
+  // exactly, so "which skill does opening it unlock" agrees on both sides.
+  // Trophy caps the unit.
   if (lessons.length <= 1) return [...lessons, { kind: "trophy" }];
+  const beforeCount = Math.ceil(lessons.length / 2);
   return [
-    ...lessons.slice(0, -1),
-    { kind: "chest" },
-    lessons[lessons.length - 1],
+    ...lessons.slice(0, beforeCount),
+    { kind: "chest", checkpoint: unit.checkpoint },
+    ...lessons.slice(beforeCount),
     { kind: "trophy" },
   ];
 }
 
-export function PathMap({ path }: { path: PathResponse }) {
+export function PathMap({ path, onRefresh }: { path: PathResponse; onRefresh?: () => void }) {
   const router = useRouter();
+  const fetchUser = useUserStore((s) => s.fetchUser);
   const [openNode, setOpenNode] = useState<string | null>(null);
   const [activeUnit, setActiveUnit] = useState(0);
+  const [reward, setReward] = useState<number | null>(null);
+  const [openingChest, setOpeningChest] = useState(false);
   const sectionRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  // Tapping an available chest is a one-shot action: pay out a random gem
+  // reward and unlock the skill it was gating (crud.open_checkpoint does
+  // both server-side, re-verifying the prerequisite skills itself rather
+  // than trusting the client). A stale double-tap just 400s — the button
+  // is already disabled once `openingChest` is true.
+  const handleOpenChest = async (unitId: number) => {
+    if (openingChest) return;
+    setOpeningChest(true);
+    try {
+      const result = await api.openCheckpoint(unitId);
+      setReward(result.gems_earned);
+      setTimeout(() => setReward(null), 2800);
+      fetchUser();
+      onRefresh?.();
+    } catch {
+      // e.g. another tab already opened it — a refresh will resync the UI
+    } finally {
+      setOpeningChest(false);
+    }
+  };
 
   // The banner is sticky and swaps to whichever unit currently owns the top
   // of the viewport — so scrolling out of Unit 1 hands the guidebook bar over
@@ -156,17 +186,35 @@ export function PathMap({ path }: { path: PathResponse }) {
                 const offset = ZIGZAG[globalIndex % ZIGZAG.length];
                 globalIndex += 1;
 
-                if (entry.kind !== "lesson") {
+                if (entry.kind === "trophy") {
                   return (
                     <PathNode
-                      key={`${unit.id}-${entry.kind}-${i}`}
-                      kind={entry.kind as NodeKind}
+                      key={`${unit.id}-trophy-${i}`}
+                      kind="trophy"
                       status={unitDone ? "done" : "locked"}
                       icon={Star}
                       colorTheme={unit.color_theme}
                       offset={offset}
                       clickable={false}
-                      label={entry.kind === "chest" ? "Treasure chest" : "Unit trophy"}
+                      label="Unit trophy"
+                    />
+                  );
+                }
+
+                if (entry.kind === "chest") {
+                  const cp = entry.checkpoint;
+                  const chestStatus: NodeStatus = cp?.opened ? "done" : cp?.available ? "current" : "locked";
+                  return (
+                    <PathNode
+                      key={`${unit.id}-chest-${i}`}
+                      kind="chest"
+                      status={chestStatus}
+                      icon={Star}
+                      colorTheme={unit.color_theme}
+                      offset={offset}
+                      clickable={!!cp?.available && !openingChest}
+                      onActivate={() => handleOpenChest(unit.id)}
+                      label={cp?.opened ? "Treasure chest (opened)" : cp?.available ? "Open treasure chest" : "Treasure chest"}
                     />
                   );
                 }
@@ -212,6 +260,12 @@ export function PathMap({ path }: { path: PathResponse }) {
           </div>
         );
       })}
+
+      {reward !== null && (
+        <p className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-duo-eel text-white text-sm font-extrabold px-5 py-3 rounded-xl shadow-duo-card animate-pop-in z-50 flex items-center gap-2">
+          <Gem size={18} className="text-duo-blue" /> +{reward} gems!
+        </p>
+      )}
     </div>
   );
 }

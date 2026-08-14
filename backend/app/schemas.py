@@ -47,6 +47,11 @@ class SkillNodeOut(BaseModel):
     xp_reward: int       # XP for one lesson of this skill — drives the node popup's "+N XP"
 
 
+class CheckpointOut(BaseModel):
+    opened: bool
+    available: bool  # prerequisite skills are all done and it hasn't been opened yet
+
+
 class UnitOut(BaseModel):
     id: int
     title: str
@@ -54,10 +59,17 @@ class UnitOut(BaseModel):
     order_index: int
     color_theme: str
     skills: list[SkillNodeOut]
+    checkpoint: Optional[CheckpointOut] = None  # None if the unit has <2 skills (no chest)
 
 
 class PathOut(BaseModel):
     units: list[UnitOut]
+
+
+class CheckpointOpenOut(BaseModel):
+    gems_earned: int
+    total_gems: int
+    next_skill_unlocked: Optional[str] = None
 
 
 # ---------- Lesson player ----------

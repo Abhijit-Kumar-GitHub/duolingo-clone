@@ -64,11 +64,28 @@ def read_path(user: models.User = Depends(current_user), db: Session = Depends(g
                 lessons_completed=p.lessons_completed if p else 0,
                 xp_reward=s.lessons[0].xp_reward if s.lessons else 10,
             ))
+
+        checkpoint_out = None
+        if crud.checkpoint_gate_index(db, u.id) is not None:
+            cp = crud.get_or_create_checkpoint(db, user.id, u.id)
+            checkpoint_out = schemas.CheckpointOut(
+                opened=cp.opened,
+                available=not cp.opened and crud.checkpoint_prerequisites_met(db, user.id, u.id),
+            )
+
         out_units.append(schemas.UnitOut(
             id=u.id, title=u.title, description=u.description, order_index=u.order_index,
-            color_theme=u.color_theme, skills=skill_nodes,
+            color_theme=u.color_theme, skills=skill_nodes, checkpoint=checkpoint_out,
         ))
     return schemas.PathOut(units=out_units)
+
+
+@router.post("/checkpoint/{unit_id}/open", response_model=schemas.CheckpointOpenOut)
+def open_checkpoint(unit_id: int, user: models.User = Depends(current_user), db: Session = Depends(get_db)):
+    result = crud.open_checkpoint(db, user, unit_id)
+    if result is None:
+        raise HTTPException(400, "Checkpoint isn't available yet")
+    return schemas.CheckpointOpenOut(**result)
 
 
 # ---------- Lesson ----------

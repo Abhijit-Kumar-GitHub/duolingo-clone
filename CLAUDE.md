@@ -81,10 +81,7 @@ diff against the real Duolingo app is planned as a follow-up.
 - Duolingo's actual brand colors are already tokenized in
   `frontend/tailwind.config.ts` (`duo-green`, `duo-red`, etc.) — use those
   tokens, never a raw hex.
-- The sidebar wordmark ("lingo") and skill-node icons (Lucide line icons,
-  not illustrated art) are deliberate stand-ins for Duolingo's proprietary
-  logo/illustration assets — don't try to make these more "authentic" by
-  reproducing actual Duolingo branding or artwork.
+
 
 ## Reseeding / resetting local state
 

@@ -123,6 +123,20 @@ class UserSkillProgress(Base):
     skill = relationship("Skill")
 
 
+class UserUnitCheckpoint(Base):
+    """One row per user per unit that has a checkpoint (the treasure-chest
+    node roughly halfway through a unit — see crud.checkpoint_gate_index).
+    Tracks whether it's been opened yet — opening it is what unlocks the
+    skill right after it and pays out a gem reward, rather than that skill
+    unlocking automatically like its neighbors do."""
+    __tablename__ = "user_unit_checkpoints"
+
+    user_id = Column(Integer, ForeignKey("users.id"), primary_key=True)
+    unit_id = Column(Integer, ForeignKey("units.id"), primary_key=True)
+    opened = Column(Boolean, default=False)
+    opened_at = Column(DateTime, nullable=True)
+
+
 class UserLessonCompletion(Base):
     """Append-only history log. One row per finished lesson attempt."""
     __tablename__ = "user_lesson_completions"

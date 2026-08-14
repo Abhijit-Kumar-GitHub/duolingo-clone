@@ -38,12 +38,18 @@ export interface SkillNode {
   crowns: number; total_lessons: number; lessons_completed: number; xp_reward: number;
 }
 
+export interface Checkpoint { opened: boolean; available: boolean; }
+
 export interface Unit {
   id: number; title: string; description: string; order_index: number;
-  color_theme: string; skills: SkillNode[];
+  color_theme: string; skills: SkillNode[]; checkpoint: Checkpoint | null;
 }
 
 export interface PathResponse { units: Unit[]; }
+
+export interface CheckpointOpenResult {
+  gems_earned: number; total_gems: number; next_skill_unlocked: string | null;
+}
 
 export interface Exercise {
   id: number; type: string; prompt: string; payload: Record<string, any>; order_index: number;
@@ -82,6 +88,8 @@ export const api = {
   simulateDay: () => request<User>("/api/user/simulate-day", { method: "POST" }),
   getWeeklyActivity: () => request<DayActivity[]>("/api/user/weekly-activity"),
   getPath: () => request<PathResponse>("/api/path"),
+  openCheckpoint: (unitId: number) =>
+    request<CheckpointOpenResult>(`/api/checkpoint/${unitId}/open`, { method: "POST" }),
   getLesson: (skillId: number) => request<LessonResponse>(`/api/lesson/${skillId}`),
   checkAnswer: (exerciseId: number, answer: string) =>
     request<AnswerCheckResult>("/api/lesson/check-answer", {

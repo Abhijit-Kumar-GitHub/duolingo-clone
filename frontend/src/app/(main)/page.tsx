@@ -35,7 +35,7 @@ export default function HomePage() {
   return (
     <div className="flex gap-10 max-w-4xl mx-auto pt-4">
       <div className="flex-1 min-w-0">
-        <PathMap path={path} />
+        <PathMap path={path} onRefresh={loadPath} />
       </div>
       <RightRail>
         <SuperCard />
