@@ -1,14 +1,25 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ComponentType } from "react";
 import { api, Profile } from "@/lib/api";
-import { Flame, Trophy, Star, Award, Footprints, Medal } from "lucide-react";
 import clsx from "clsx";
 import { RightRail } from "@/components/features/rail/RightRail";
 import { FollowingWidget } from "@/components/features/rail/FollowingWidget";
-import { GlossyBadge } from "@/components/features/GlossyBadge";
+import { Avatar } from "@/components/features/art/Avatar";
+import {
+  ArtIconProps, CrownIcon, FlameIcon, LeagueBadgeIcon, TargetIcon, TrophyIcon, XpIcon,
+} from "@/components/features/art/icons";
 
-const ICONS: Record<string, any> = { footprints: Footprints, star: Star, flame: Flame, trophy: Trophy, medal: Medal };
+// Maps the achievement rows' `icon_name` (seeded in backend/app/seed.py) onto
+// the art set. Unearned badges render the same shape in the grey ramp rather
+// than a separate "locked" graphic — same convention as the locked path nodes.
+const ICONS: Record<string, ComponentType<ArtIconProps>> = {
+  footprints: TargetIcon,
+  star: CrownIcon,
+  flame: FlameIcon,
+  trophy: TrophyIcon,
+  medal: LeagueBadgeIcon,
+};
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -24,9 +35,7 @@ export default function ProfilePage() {
     <div className="flex gap-10 max-w-4xl mx-auto pt-8 pb-16">
       <div className="flex-1 min-w-0 max-w-lg">
         <div className="flex items-center gap-4 mb-8">
-          <div className="w-20 h-20 rounded-full bg-duo-green/10 flex items-center justify-center text-4xl">
-            {user.avatar_emoji}
-          </div>
+          <Avatar name={user.display_name} seed={user.username} size={80} isOwl />
           <div>
             <h1 className="text-2xl font-extrabold text-duo-eel">{user.display_name}</h1>
             <p className="text-duo-wolf text-sm">@{user.username}</p>
@@ -34,10 +43,10 @@ export default function ProfilePage() {
         </div>
 
         <div className="grid grid-cols-2 gap-3 mb-8">
-          <StatCard icon={Flame} color="fox" label="Day streak" value={user.streak} />
-          <StatCard icon={Trophy} color="yellow" label="Total XP" value={user.total_xp} />
-          <StatCard icon={Star} color="blue" label="Skills completed" value={profile.skills_completed} />
-          <StatCard icon={Award} color="purple" label="Lessons completed" value={profile.lessons_completed} />
+          <StatCard icon={FlameIcon} label="Day streak" value={user.streak} />
+          <StatCard icon={XpIcon} label="Total XP" value={user.total_xp} />
+          <StatCard icon={CrownIcon} label="Skills completed" value={profile.skills_completed} />
+          <StatCard icon={TargetIcon} label="Lessons completed" value={profile.lessons_completed} />
         </div>
 
         <div className="flex items-center justify-between mb-3">
@@ -46,11 +55,11 @@ export default function ProfilePage() {
         </div>
         <div className="flex flex-col divide-y divide-duo-swan border border-duo-swan rounded-2xl px-4">
           {profile.achievements.map((a) => {
-            const Icon = ICONS[a.icon_name] ?? Award;
+            const Icon = ICONS[a.icon_name] ?? TrophyIcon;
             const pct = a.earned ? 100 : 0; // requirement progress isn't exposed by the API — earned is binary
             return (
               <div key={a.code} className="flex items-center gap-4 py-4">
-                <GlossyBadge color="yellow" muted={!a.earned} icon={Icon} />
+                <Icon size={46} muted={!a.earned} />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-1">
                     <p className="font-extrabold text-sm text-duo-eel">{a.title}</p>
@@ -73,10 +82,10 @@ export default function ProfilePage() {
   );
 }
 
-function StatCard({ icon, color, label, value }: { icon: any; color: "fox" | "yellow" | "blue" | "purple"; label: string; value: number }) {
+function StatCard({ icon: Icon, label, value }: { icon: ComponentType<ArtIconProps>; label: string; value: number }) {
   return (
     <div className="border border-duo-swan rounded-2xl p-4 flex items-center gap-3">
-      <GlossyBadge color={color} size="sm" icon={icon} />
+      <Icon size={32} />
       <div>
         <p className="font-extrabold text-xl text-duo-eel leading-none">{value}</p>
         <p className="text-xs text-duo-wolf">{label}</p>

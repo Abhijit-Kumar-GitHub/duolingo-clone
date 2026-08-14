@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { api, Exercise, LessonCompleteResult } from "@/lib/api";
+import { ApiError, api, Exercise, LessonCompleteResult } from "@/lib/api";
 
 type FeedbackState = "idle" | "correct" | "incorrect";
 
@@ -53,7 +53,15 @@ export const useLessonStore = create<LessonState>((set, get) => ({
     try {
       const lesson = await api.getLesson(skillId);
       set({ lessonId: lesson.lesson_id, exercises: lesson.exercises, loading: false });
-    } catch {
+    } catch (err) {
+      // The backend refuses to deal a lesson on zero hearts (routes.py). That
+      // isn't a load failure — it's the same state the player already handles
+      // mid-lesson, so route it to the out-of-hearts modal rather than the
+      // generic "couldn't load" screen.
+      if (err instanceof ApiError && err.code === "no_hearts") {
+        set({ loading: false, hearts: 0, isOutOfHearts: true });
+        return;
+      }
       set({ loading: false, loadError: true });
     }
   },

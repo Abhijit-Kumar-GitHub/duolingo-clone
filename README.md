@@ -10,10 +10,14 @@ mechanics (XP, streaks, hearts, crowns, leaderboard, achievements).
 
 | Layer | Choice |
 |---|---|
-| Frontend | Next.js 14 (App Router, TypeScript), Tailwind CSS, Zustand, Framer Motion, react-confetti |
+| Frontend | Next.js 14 (App Router, TypeScript), Tailwind CSS, Zustand, react-confetti |
 | Backend | Python, FastAPI, SQLAlchemy, Pydantic v2 |
 | Database | SQLite |
-| Deployment | Frontend → Vercel · Backend → Railway/Render |
+| Deployment | Frontend → Vercel · Backend → Render |
+
+> The backend runs on Render's free tier, which sleeps after 15 minutes of
+> inactivity — the **first** request after a cold start can take ~30–50s
+> before the path loads. Subsequent requests are immediate.
 
 ## Project structure
 
@@ -37,21 +41,26 @@ duolingo-clone/
 │       │   │   ├── page.tsx        # learning path (home)
 │       │   │   ├── leaderboard/
 │       │   │   ├── profile/
-│       │   │   ├── practice/       # placeholder + dev tools (simulate day, refill hearts)
-│       │   │   ├── quests/         # placeholder
+│       │   │   ├── sections/       # section list (Section 1 real, 2–3 Coming Soon)
+│       │   │   ├── practice/       # placeholder + dev tools (simulate day, fill hearts)
+│       │   │   ├── quests/         # daily-quest card (real XP goal, rest mocked)
 │       │   │   ├── shop/           # placeholder (mocked gem store)
 │       │   │   └── settings/       # placeholder
 │       │   ├── lesson/[skillId]/   # full-screen lesson player (no sidebar)
+│       │   ├── icon.svg            # favicon (App Router picks this up automatically)
 │       │   └── layout.tsx          # root layout, font
 │       ├── components/features/
-│       │   ├── Sidebar.tsx, StatsBar.tsx, Popover.tsx
+│       │   ├── Sidebar.tsx, MobileNav.tsx, StatsBar.tsx, Popover.tsx
 │       │   ├── popovers/           # CoursePopover, StreakPopover, GemsPopover, HeartsPopover
-│       │   ├── PathMap.tsx, SkillNode.tsx
+│       │   ├── art/                # hand-drawn SVG asset set — see "Artwork" below
+│       │   ├── PathMap.tsx, PathNode.tsx, NodePopover.tsx, GlossyBadge.tsx
+│       │   ├── JumpAheadBubble.tsx, GuidebookButton.tsx, FlagIcon.tsx
+│       │   ├── rail/               # right-rail widgets (League, Daily Quests, Super, Following)
 │       │   ├── LessonPlayer.tsx, FeedbackBar.tsx, ComingSoon.tsx
 │       │   ├── exercises/          # MultipleChoice, TranslateWordBank, MatchPairs, FillBlank, TypeAnswer
 │       │   └── modals/             # OutOfHeartsModal, LessonCompleteModal
 │       ├── store/                  # useUserStore, useLessonStore (Zustand)
-│       └── lib/api.ts              # typed fetch client
+│       └── lib/api.ts              # typed fetch client + ApiError
 └── README.md
 ```
 
@@ -116,15 +125,31 @@ Adding a 6th exercise type means: one new payload shape in `seed.py`, one new
 React component, one new entry in `LessonPlayer.tsx`'s type map — nothing
 else changes.
 
-**Branding note:** the sidebar wordmark is a placeholder ("lingo") in the
-same bold rounded-green treatment as the original, rather than a reproduction
-of Duolingo's actual logo asset — real Duolingo's skill icons are bespoke
-illustrated art, which is proprietary and not something this clone
-reproduces; skill nodes instead use plain colored circles with Lucide line
-icons per topic (`components/features/SkillNode.tsx`). The goal throughout
-was to faithfully recreate the *interaction design and UX patterns* (colors,
-layout, motion, the lesson loop, the stats-bar hover popovers), not to copy
-trademarked brand or illustration assets.
+**Artwork (`components/features/art/`):** every game asset — the mascot,
+streak flame, gem, heart, XP bolt, crown, treasure chest, trophy, league
+badges, the sidebar's illustrated nav icons, the wordmark lockup and the
+favicon — is hand-drawn inline SVG in this repo. Three reasons it isn't
+emoji or an icon library:
+
+1. **Emoji render differently per OS** and can't be tinted. Windows' Segoe
+   UI Emoji has no flag-emoji ligatures at all, so 🇪🇸 falls back to the bare
+   text "ES" — which is why `FlagIcon.tsx` exists too.
+2. **Lucide is a monochrome *line* set.** Duolingo's economy icons are solid
+   multi-tone shapes with a lit face and a shaded underside. A grey outlined
+   gem next to a glossy green path node reads as two different apps. Lucide
+   is still used, correctly, for nav and chrome.
+3. **Inline SVG can't 404**, needs no image request, and scales to any size —
+   so the deployed build looks identical to local with no asset pipeline.
+
+`art/icons.tsx` holds the game assets (drawn at many sizes), `art/navIcons.tsx`
+the destination icons (one size, one place). Nav icons keep fixed colours and
+never recolour on selection — it's the *row* that highlights, in blue.
+
+These are original drawings in Duolingo's visual *language*, not copies of
+its asset files, and "lingo" is this clone's own wordmark rather than a
+reproduction of the trademarked one. The goal throughout was to recreate the
+*interaction design and UX patterns* — colors, layout, motion, the lesson
+loop, the node popups, the stats-bar popovers — not to copy brand assets.
 
 ## Database schema
 
@@ -144,6 +169,9 @@ exercises             id, lesson_id → lessons, type, prompt,
 
 user_skill_progress   user_id → users, skill_id → skills  (composite PK)
                        status (locked|available|completed), crowns (0-5), lessons_completed
+
+user_unit_checkpoints  user_id → users, unit_id → units  (composite PK)
+                        opened, opened_at        [the mid-unit treasure-chest gate]
 
 user_lesson_completions   id, user_id → users, lesson_id → lessons,
                            xp_earned, accuracy, completed_at        [append-only history log]
@@ -169,6 +197,12 @@ user_achievements       user_id → users, achievement_id → achievements (comp
   source of truth instead of counters that can drift.
 - `user_lesson_completions` is a full history, not just a boolean, so profile
   stats can be derived rather than tracked as separate counters.
+- `user_unit_checkpoints` stores only whether the chest was opened, not which
+  skill it unlocked. The chest's position is *derived* (`crud.checkpoint_gate_index`
+  = `ceil(skill_count / 2)`), so it stays correct if a unit's skill list
+  changes, and because the path is a strictly linear chain, "are the chest's
+  prerequisites met?" reduces to checking the single skill immediately before
+  it rather than walking the whole prefix.
 
 ## API overview
 
@@ -180,24 +214,40 @@ to `1` server-side if omitted). Full interactive docs at `/docs`.
 | GET | `/api/user/me` | Current learner + stats (applies lazy streak decay / heart regen) |
 | POST | `/api/user/simulate-day` | Dev helper: rolls `last_active_date` back a day to demo streak-break logic |
 | GET | `/api/user/weekly-activity` | Sun–Sat activity strip for the streak popover calendar |
-| GET | `/api/path` | Units → skills tree with per-skill lock/available/completed status + crowns |
-| GET | `/api/lesson/{skill_id}` | Next lesson's exercises for a skill (answers withheld) |
+| GET | `/api/path` | Units → skills tree with per-skill lock/available/completed status, crowns + checkpoint state |
+| POST | `/api/checkpoint/{unit_id}/open` | Opens a unit's treasure chest: pays 500–1000 gems and unlocks the skill it gates (prerequisites re-verified server-side) |
+| GET | `/api/lesson/{skill_id}` | Next lesson's exercises for a skill (answers withheld). 403 `skill_locked` if the skill isn't reached yet, 403 `no_hearts` on an empty heart balance |
 | POST | `/api/lesson/check-answer` | Grades one exercise; deducts a heart on a wrong answer |
-| POST | `/api/lesson/complete` | Finalizes a lesson: awards XP, updates streak/crowns, unlocks next skill, evaluates achievements |
+| POST | `/api/lesson/complete` | Finalizes a lesson: awards XP, updates streak/crowns, unlocks next skill, evaluates achievements. `practice: true` halves XP and skips all progression |
 | GET | `/api/hearts` | Current hearts/gems + seconds until next heart regenerates |
 | POST | `/api/hearts/refill` | Mocked gem-for-hearts refill (350 gems → full hearts) |
+| POST | `/api/hearts/dev-fill` | Dev helper: free instant heart top-up + 1000 gems (see the Practice page's dev tools) |
 | GET | `/api/leaderboard` | Weekly XP ranking across all seeded users |
 | GET | `/api/profile` | Stats + achievement progress |
 
+Error responses use FastAPI's `HTTPException` with an object `detail`
+carrying a machine-readable `code`, so the client can branch on the *reason*
+rather than parsing a message string — `lib/api.ts` surfaces it as
+`ApiError.code`. Both lesson-entry refusals are 403 but need very different
+UI (a locked skill is a no-op; no hearts opens the refill modal).
+
 ## Seeded content
 
-- 2 units, 6 skills ("Greetings", "Food", "Animals", "Family", "Colors",
-  "Travel"), 12 lessons, 48 exercises spanning all 5 required exercise types
-  (multiple choice, translate/word-bank, match pairs, fill-in-the-blank,
-  type-the-answer) — real (small) Spanish vocabulary, not lorem ipsum.
-- A default learner ("Abhijit") pre-seeded with a 3-day streak, 150 XP, and
-  2 completed skills, so the app is immediately demoable without playing
-  from zero.
+- **3 units, 12 skills, 47 lessons, 280 exercises** — mirroring the real
+  Spanish course's Section 1:
+  - *Section 1, Unit 1 — Order at a café*: Order drinks, Order food, Be polite, At the table
+  - *Section 1, Unit 2 — Greet people and say goodbye*: Say hello, Share your name, Say goodbye, Ask how it's going
+  - *Section 1, Unit 3 — Say where you are from*: Your country, Languages, Where you live, About you
+- All 5 required exercise types, evenly spread (multiple choice 58,
+  type-the-answer 58, fill-in-the-blank 57, match pairs 57, translate/word-bank
+  50) — real Spanish vocabulary and real Duolingo prompt phrasings, not lorem
+  ipsum. Generation is seeded with a fixed RNG (`random.Random(20240613)` in
+  `seed.py`), so the same course is produced on every machine and every deploy.
+- Each skill holds 3–5 lessons of 4–8 exercises, matching how the real path
+  shows partial progress as a fraction of the ring around a node.
+- A default learner ("Abhijit") pre-seeded with a 3-day streak, XP, and
+  completed skills, so the app is immediately demoable without playing from
+  zero.
 - 6 achievements and 6 rival users with backdated activity for a populated
   leaderboard on first load.
 
@@ -234,8 +284,21 @@ panel lives in `components/features/popovers/`:
   `/api/profile`) rather than via a background job, so the pre-seeded
   learner's badges resolve correctly the first time the profile page loads
   even though no lesson has been played yet in that session.
-- "Practice" page doubles as a small dev panel (simulate a day passing,
-  manual heart refill) to make streak/heart edge cases quick to demo without
+- Hearts gate lesson *entry*, not just mid-lesson play: `GET /api/lesson/{skill_id}`
+  refuses to deal exercises on a zero balance, and the client turns that
+  refusal into the same out-of-hearts modal, so backing out and re-tapping a
+  node can't be used to keep playing for free.
+- The treasure chest is a real checkpoint, not decoration: it sits at
+  `ceil(skills/2)` in each unit, and the skill after it stays locked until
+  the chest is opened — which is also the only thing that unlocks it, so the
+  chest can't be skipped past.
+- "Practice" on a finished node replays that skill's lessons at half XP with
+  no crown/unlock progress (`practice: true` on `/api/lesson/complete`).
+  "Legendary" is a Super feature and is a Coming Soon note.
+- "Practice" page doubles as a small dev panel (simulate a day passing, free
+  heart+gem top-up) to make streak/heart edge cases quick to demo without
   waiting on real timers.
-- Audio, real speech recognition, and Super/IAP are "Coming Soon" placeholders
-  per the assignment's allowed-mocks list.
+- Leagues have a full tier ladder in the UI but no weekly promotion/demotion
+  job — the learner is always in Bronze.
+- Audio, real speech recognition, dark mode, and Super/IAP are "Coming Soon"
+  placeholders per the assignment's allowed-mocks list.

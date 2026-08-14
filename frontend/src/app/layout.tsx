@@ -9,7 +9,7 @@ const nunito = Nunito({
 });
 
 export const metadata: Metadata = {
-  title: "Duolingo Clone",
+  title: "Lingo — the free, fun way to learn a language",
   description: "Learn a language for free, forever.",
 };
 

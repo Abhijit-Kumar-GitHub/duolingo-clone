@@ -1,14 +1,15 @@
 "use client";
 
-import { Gem, Heart, Infinity as InfinityIcon, Snowflake, Shirt } from "lucide-react";
+import { Infinity as InfinityIcon, Snowflake, Shirt } from "lucide-react";
 import { useUserStore } from "@/store/useUserStore";
+import { GemIcon, HeartIcon } from "@/components/features/art/icons";
 import { SuperBanner } from "@/components/features/rail/SuperBanner";
 import { RightRail } from "@/components/features/rail/RightRail";
 import { LeagueWidget } from "@/components/features/rail/LeagueWidget";
 import { DailyQuestsWidget } from "@/components/features/rail/DailyQuestsWidget";
 
 const HEARTS_ITEMS = [
-  { icon: Heart, name: "Refill Hearts", description: "Get full hearts so you can worry less about making mistakes in a lesson.", price: "350", color: "text-duo-red", bg: "bg-duo-red/10" },
+  { icon: HeartIcon, name: "Refill Hearts", description: "Get full hearts so you can worry less about making mistakes in a lesson.", price: "350", color: "text-duo-red", bg: "bg-duo-red/10" },
   { icon: InfinityIcon, name: "Unlimited Hearts", description: "Never run out of hearts with Super!", price: "Free trial", color: "text-duo-blue", bg: "bg-duo-blue/10" },
 ];
 
@@ -32,7 +33,7 @@ function ShopRow({ icon: Icon, name, description, price, color, bg }: {
       <span className="shrink-0 border-2 border-duo-swan rounded-xl px-3 py-1.5 text-xs font-extrabold uppercase tracking-wide text-duo-wolf whitespace-nowrap">
         {price === "Free trial" ? price : (
           <span className="flex items-center gap-1">
-            Get for <Gem size={11} className="fill-duo-blue text-duo-blue" /> {price}
+            Get for <GemIcon size={12} /> {price}
           </span>
         )}
       </span>
@@ -49,7 +50,7 @@ export default function ShopPage() {
         <SuperBanner />
 
         <div className="flex items-center gap-2 justify-center mb-6 -mt-2">
-          <Gem className="text-duo-blue fill-duo-blue" size={20} />
+          <GemIcon size={22} />
           <span className="font-extrabold text-duo-eel">{gems} gems</span>
         </div>
 

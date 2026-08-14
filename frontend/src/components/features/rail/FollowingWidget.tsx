@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { ChevronRight, UserPlus, Users } from "lucide-react";
 import { api, LeaderboardEntry } from "@/lib/api";
+import { Avatar } from "../art/Avatar";
 
 // Profile-page-only rail variant (in place of the Super/League/Quests
 // widgets shown elsewhere). Friends/social is explicitly a mockable area
@@ -38,7 +39,7 @@ export function FollowingWidget() {
         <div className="flex flex-col gap-2">
           {shown.map((entry) => (
             <div key={entry.username} className="flex items-center gap-3">
-              <span className="text-2xl">{entry.avatar_emoji}</span>
+              <Avatar name={entry.display_name} seed={entry.username} size={34} />
               <div className="flex-1 min-w-0">
                 <p className="font-bold text-sm text-duo-eel truncate">{entry.display_name}</p>
                 <p className="text-xs text-duo-wolf">{entry.weekly_xp} XP</p>

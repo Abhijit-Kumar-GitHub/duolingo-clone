@@ -1,7 +1,8 @@
 "use client";
 
-import { Dumbbell, RefreshCcw, Heart } from "lucide-react";
+import { Dumbbell, RefreshCcw } from "lucide-react";
 import { ComingSoon } from "@/components/features/ComingSoon";
+import { HeartIcon } from "@/components/features/art/icons";
 import { api } from "@/lib/api";
 import { useUserStore } from "@/store/useUserStore";
 
@@ -29,7 +30,7 @@ export default function PracticePage() {
           onClick={async () => { await api.devFillHearts().catch(() => {}); fetchUser(); }}
           className="btn-duo-outline w-full flex items-center justify-center gap-2"
         >
-          <Heart size={16} /> Fill hearts + 1000 gems (free, dev-only)
+          <HeartIcon size={16} /> Fill hearts + 1000 gems (free, dev-only)
         </button>
         <button
           onClick={async () => { await api.refillHearts().catch(() => {}); fetchUser(); }}

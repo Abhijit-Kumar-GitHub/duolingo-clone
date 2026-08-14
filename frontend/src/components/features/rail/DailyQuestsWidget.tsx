@@ -1,9 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Zap, Gift } from "lucide-react";
 import { useUserStore } from "@/store/useUserStore";
-import { GlossyBadge } from "../GlossyBadge";
+import { ChestIcon, XpIcon } from "../art/icons";
 
 // Compact rail version of the daily-goal quest card, reused on Learn/Shop.
 // The full version (with the "more quests unlock soon" row) lives on the
@@ -24,14 +23,15 @@ export function DailyQuestsWidget() {
         </Link>
       </div>
       <div className="flex items-center gap-3">
-        <GlossyBadge color="yellow" size="sm" icon={Zap} />
+        <XpIcon size={30} />
         <div className="flex-1">
           <p className="text-xs font-bold text-duo-eel mb-1">Earn {user.daily_xp_goal} XP</p>
           <div className="h-2.5 bg-duo-swan rounded-full overflow-hidden">
             <div className="h-full bg-duo-yellow rounded-full transition-all" style={{ width: `${pct}%` }} />
           </div>
         </div>
-        <GlossyBadge color="fox" size="sm" icon={Gift} />
+        {/* the quest's reward is a chest, same as on the path — not a gift box */}
+        <ChestIcon size={30} muted={pct < 100} />
       </div>
     </div>
   );

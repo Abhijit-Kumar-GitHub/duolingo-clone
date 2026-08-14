@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { X, Heart } from "lucide-react";
+import { X } from "lucide-react";
+import { HeartIcon } from "./art/icons";
 import { useLessonStore } from "@/store/useLessonStore";
 import { useUserStore } from "@/store/useUserStore";
 import { FeedbackBar } from "./FeedbackBar";
@@ -61,16 +62,34 @@ export function LessonPlayer({ skillId }: { skillId: number }) {
     );
   }
 
-  if (loading || exercises.length === 0) {
-    return <div className="min-h-screen flex items-center justify-center text-duo-hare font-bold">Loading lesson...</div>;
-  }
-
+  // Checked before the loading/empty guard below, because you can now hit
+  // this state with *no* exercises loaded at all: arriving on zero hearts is
+  // refused by the backend (routes.py) and useLessonStore turns that refusal
+  // into `isOutOfHearts`. Ordered after loadError so a genuine failure still
+  // wins.
   if (isOutOfHearts && !isLessonComplete) {
-    return <OutOfHeartsModal onRefill={() => { useLessonStore.setState({ isOutOfHearts: false, hearts: 5 }); fetchUser(); }} />;
+    return (
+      <OutOfHeartsModal
+        onRefill={() => {
+          fetchUser();
+          const refilled = user?.max_hearts ?? 5;
+          if (exercises.length === 0) {
+            // blocked on entry — the lesson was never dealt, so fetch it now
+            loadLesson(skillId, refilled, isPractice);
+          } else {
+            useLessonStore.setState({ isOutOfHearts: false, hearts: refilled });
+          }
+        }}
+      />
+    );
   }
 
   if (isLessonComplete && result) {
     return <LessonCompleteModal result={result} />;
+  }
+
+  if (loading || exercises.length === 0) {
+    return <div className="min-h-screen flex items-center justify-center text-duo-hare font-bold">Loading lesson...</div>;
   }
 
   const exercise = exercises[currentIndex];
@@ -99,7 +118,7 @@ export function LessonPlayer({ skillId }: { skillId: number }) {
           <div className="h-full bg-duo-green rounded-full transition-all duration-300" style={{ width: `${progressPct}%` }} />
         </div>
         <div className="flex items-center gap-1 font-extrabold text-duo-red">
-          <Heart className="fill-duo-red" size={22} />
+          <HeartIcon size={24} muted={hearts === 0} />
           {hearts}
         </div>
       </div>

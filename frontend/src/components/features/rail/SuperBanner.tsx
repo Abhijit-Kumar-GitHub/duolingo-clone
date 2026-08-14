@@ -1,25 +1,27 @@
 "use client";
 
-import { Infinity as InfinityIcon } from "lucide-react";
-import { GlossyBadge } from "../GlossyBadge";
+import { DuoOwl } from "../art/DuoOwl";
+import { SuperWordmark } from "./SuperWordmark";
 
 // Full-width variant of SuperCard used as the Shop page's top banner (real
 // Duolingo uses the compact card in the rail but a wide banner here) —
-// same mocked-upsell content, just a different shape for a different slot.
+// same mocked-upsell content and the same white-card treatment, just a
+// different shape for a different slot.
 export function SuperBanner() {
   return (
-    <div className="bg-duo-eel rounded-2xl px-6 py-5 text-white flex items-center justify-between gap-4 mb-8">
-      <div className="flex items-center gap-4">
-        <GlossyBadge color="purple" icon={InfinityIcon} />
-        <div>
-          <span className="inline-block bg-duo-yellow text-duo-eel text-[10px] font-extrabold px-2 py-0.5 rounded-md tracking-wide mb-1">
-            SUPER
-          </span>
-          <p className="font-extrabold leading-snug">Start a 1 week free trial to enjoy exclusive Super benefits</p>
+    <div className="border border-duo-swan rounded-2xl px-6 py-5 flex items-center justify-between gap-4 mb-8">
+      <div className="flex items-center gap-4 min-w-0">
+        <DuoOwl size={64} gradient className="shrink-0" />
+        <div className="min-w-0">
+          <SuperWordmark className="text-base" />
+          <p className="font-extrabold text-duo-eel leading-snug">Try Super for free</p>
+          <p className="text-sm text-duo-wolf leading-snug">
+            No ads, personalized practice, and unlimited Legendary!
+          </p>
         </div>
       </div>
-      <button className="bg-white text-duo-eel font-extrabold text-xs uppercase tracking-wide rounded-2xl px-5 py-3 shrink-0 opacity-90 cursor-default whitespace-nowrap">
-        Start my free 7 days
+      <button className="bg-duo-indigo text-white font-extrabold text-xs uppercase tracking-wide rounded-2xl px-5 py-3 shrink-0 shadow-duo-indigo cursor-default whitespace-nowrap">
+        Try 1 week free
       </button>
     </div>
   );

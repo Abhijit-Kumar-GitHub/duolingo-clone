@@ -25,6 +25,11 @@ const config: Config = {
         "duo-hare": "#AFAFAF",
         "duo-swan": "#E5E5E5",
         "duo-snow": "#F7F7F7",
+        // Super (the subscription upsell) is the one surface that doesn't use
+        // the learning palette — it has its own indigo CTA and a
+        // green→blue→violet brand gradient.
+        "duo-indigo": "#4B4BFF",
+        "duo-indigo-dark": "#3A3AD1",
       },
       fontFamily: {
         sans: ["var(--font-nunito)", "system-ui", "sans-serif"],
@@ -38,6 +43,7 @@ const config: Config = {
         "duo-purple": "0 4px 0 #A568C9",
         "duo-teal": "0 4px 0 #00A87E",
         "duo-fox": "0 4px 0 #CC7A00",
+        "duo-indigo": "0 4px 0 #3A3AD1",
         "duo-gray": "0 4px 0 #E5E5E5",
         "duo-card": "0 2px 0 #E5E5E5",
       },
@@ -48,11 +54,16 @@ const config: Config = {
         "pop-in": { "0%": { transform: "scale(0.8)", opacity: "0" }, "100%": { transform: "scale(1)", opacity: "1" } },
         "shake": { "0%,100%": { transform: "translateX(0)" }, "25%": { transform: "translateX(-6px)" }, "75%": { transform: "translateX(6px)" } },
         "bounce-in": { "0%": { transform: "translateY(-10px)" }, "50%": { transform: "translateY(2px)" }, "100%": { transform: "translateY(0)" } },
+        // Idle float for the openable treasure chest on the path — the only
+        // node that's a one-shot action rather than a lesson, so it gets a
+        // motion cue instead of the "Start" bubble the current lesson uses.
+        "bob": { "0%,100%": { transform: "translateY(0)" }, "50%": { transform: "translateY(-5px)" } },
       },
       animation: {
         "pop-in": "pop-in 0.2s ease-out",
         "shake": "shake 0.4s ease-in-out",
         "bounce-in": "bounce-in 0.4s ease-out",
+        "bob": "bob 1.8s ease-in-out infinite",
       },
     },
   },

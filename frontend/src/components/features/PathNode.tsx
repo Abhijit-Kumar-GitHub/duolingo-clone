@@ -1,10 +1,11 @@
 "use client";
 
 import { ReactNode } from "react";
-import { Check, SkipForward, Archive, Trophy } from "lucide-react";
+import { Check, SkipForward, Star } from "lucide-react";
 import clsx from "clsx";
 import { GlossyBadge, GlossyColor } from "./GlossyBadge";
 import { JumpAheadBubble } from "./JumpAheadBubble";
+import { ChestIcon, TrophyIcon } from "./art/icons";
 
 export type NodeStatus = "done" | "current" | "upcoming" | "locked";
 // Real Duolingo mixes two decorative stops into each unit's node run: a
@@ -28,18 +29,27 @@ const RING_COLOR: Record<GlossyColor, string> = {
 
 // One node = one lesson stop on the path, rendered as a GlossyBadge coin
 // (same construction used for every other circular badge in the app — see
-// GlossyBadge.tsx). Real Duolingo's discs stay grey/monochrome — with a
-// generic filler icon — until you actually reach them; only the checkmark
-// (done) or the lesson's own icon (current) breaks the grey. Locked and
-// not-yet-reached nodes are deliberately inert (no onClick, no popup) —
-// only the single "current" node per skill opens its Start panel, plus
-// "done" nodes (which open the Practice/Legendary panel instead).
+// GlossyBadge.tsx). Three states, matching the real path exactly:
+//
+//   done     unit-coloured disc + white checkmark
+//   current  unit-coloured disc + white star + a ring showing lesson progress
+//   locked   grey disc + grey star
+//
+// A node only turns *gold* in the real app once it's been taken to Legendary,
+// which is a Super feature this clone stubs out (see NodePopover.tsx) — so
+// nothing here ever goes gold, and a finished node keeps its unit's colour.
+//
+// Every standard lesson node carries a *star*, not a per-topic glyph — the
+// real app doesn't reveal what a node teaches from the path, and only
+// non-lesson stops (chest, trophy) get their own artwork. Locked nodes are
+// deliberately inert (no onClick, no popup); only the single "current" node
+// opens its Start panel, plus "done" nodes (Practice/Legendary panel).
 export function PathNode({
-  status, icon: Icon, colorTheme, offset, clickable, onActivate, label,
+  status, icon: Icon = Star, colorTheme, offset, clickable, onActivate, label,
   kind = "lesson", showJump, jumpTarget, progressPct = 0, popover,
 }: {
   status: NodeStatus;
-  icon: any;
+  icon?: any;
   colorTheme: string;
   offset: number;
   clickable: boolean;
@@ -63,8 +73,7 @@ export function PathNode({
   const ringPct = Math.max(0, Math.min(1, progressPct));
 
   const NodeIcon =
-    kind === "chest" ? Archive
-    : kind === "trophy" ? Trophy
+    kind === "trophy" ? TrophyIcon
     : status === "done" ? Check
     : jumpTarget ? SkipForward
     : Icon;
@@ -122,15 +131,37 @@ export function PathNode({
           )
         )}
 
-        <GlossyBadge
-          size="xl"
-          color={color}
-          muted={!lit}
-          icon={NodeIcon}
-          iconSize={status === "done" && kind === "lesson" ? 25 : 23}
-          strokeWidth={status === "done" && kind === "lesson" ? 3.5 : 2.2}
-          pressable={clickable}
-        />
+        {kind === "chest" ? (
+          // The chest is the one node that isn't a disc. Real Duolingo sits
+          // it *on* the path as a standalone object, which is also what
+          // makes it read as "an item to open" rather than "another lesson
+          // to play" — so it deliberately skips GlossyBadge entirely, and
+          // gets an idle float instead of a Start bubble as its affordance.
+          <span className={clsx("block", clickable && "animate-bob")}>
+            <ChestIcon
+              size={62}
+              muted={!lit}
+              className={clsx(
+                "transition-transform drop-shadow-[0_3px_2px_rgba(0,0,0,0.18)]",
+                clickable && "hover:scale-110"
+              )}
+            />
+          </span>
+        ) : (
+          <GlossyBadge
+            size="xl"
+            color={color}
+            muted={!lit}
+            icon={NodeIcon}
+            // The trophy is one of the multi-tone art SVGs, so it needs the
+            // grey ramp handed to it explicitly — GlossyBadge's own `muted`
+            // only recolors the disc, not a filled icon on top of it.
+            iconProps={kind === "trophy" ? { muted: !lit } : undefined}
+            iconSize={kind === "trophy" ? 27 : status === "done" && kind === "lesson" ? 25 : 23}
+            strokeWidth={status === "done" && kind === "lesson" ? 3.5 : 2.2}
+            pressable={clickable}
+          />
+        )}
       </button>
 
       {popover}

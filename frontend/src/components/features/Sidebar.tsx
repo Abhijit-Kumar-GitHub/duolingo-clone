@@ -3,19 +3,23 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  Home, Dumbbell, Trophy, Target, ShoppingBag, CircleUserRound, Settings,
-  MoreHorizontal, GraduationCap, School, HelpCircle, LogOut,
-} from "lucide-react";
+import { GraduationCap, School, HelpCircle, LogOut, MoreHorizontal } from "lucide-react";
 import clsx from "clsx";
+import { Logo } from "./art/Logo";
+import { DuoOwl } from "./art/DuoOwl";
+import {
+  BirdhouseIcon, CogIcon, DumbbellIcon, ProfileRingIcon, QuestChestIcon,
+  ShieldIcon, StorefrontIcon,
+} from "./art/navIcons";
 
-// Note: "Lingo" is this clone's own placeholder wordmark, styled in the same
-// bold-rounded-green treatment as the original — the UX patterns are what's
-// being recreated here, not the trademarked logo asset itself.
+// Note: "Lingo" is this clone's own wordmark (see art/Logo.tsx), styled in
+// the same bold-rounded-green treatment as the original — the UX patterns
+// are what's being recreated here, not the trademarked logo asset itself.
 //
-// Real Duolingo's sidebar icons are each a fixed brand color (not just
-// grayscale-until-active) — colored glyph + text/bg tint only on the active
-// item, matched here via a per-item `color` token.
+// Each item is a small illustrated object in its own fixed colours (see
+// art/navIcons.tsx) that never change with selection — selection highlights
+// the *row* in blue instead. That's the real behaviour, and it's why the
+// items don't carry per-item colour tokens any more.
 //
 // Full list (also used by MobileNav.tsx, which has no room for a "More"
 // overflow menu so it flattens everything into one bottom bar). The desktop
@@ -23,14 +27,17 @@ import clsx from "clsx";
 // Settings + a few static extras behind a "More" popover — matching real
 // Duolingo's LEARN/LEADERBOARDS/QUESTS/SHOP/PROFILE + MORE structure.
 export const NAV_ITEMS = [
-  { href: "/", label: "Learn", icon: Home, color: "text-duo-green", bg: "bg-duo-green/10" },
-  { href: "/practice", label: "Practice", icon: Dumbbell, color: "text-duo-blue", bg: "bg-duo-blue/10" },
-  { href: "/leaderboard", label: "Leaderboards", icon: Trophy, color: "text-duo-yellow-dark", bg: "bg-duo-yellow/10" },
-  { href: "/quests", label: "Quests", icon: Target, color: "text-duo-fox", bg: "bg-duo-fox/10" },
-  { href: "/shop", label: "Shop", icon: ShoppingBag, color: "text-duo-red", bg: "bg-duo-red/10" },
-  { href: "/profile", label: "Profile", icon: CircleUserRound, color: "text-duo-purple", bg: "bg-duo-purple/10" },
-  { href: "/settings", label: "Settings", icon: Settings, color: "text-duo-wolf", bg: "bg-duo-swan/50" },
+  { href: "/", label: "Learn", icon: BirdhouseIcon },
+  { href: "/practice", label: "Practice", icon: DumbbellIcon },
+  { href: "/leaderboard", label: "Leaderboards", icon: ShieldIcon },
+  { href: "/quests", label: "Quests", icon: QuestChestIcon },
+  { href: "/shop", label: "Shop", icon: StorefrontIcon },
+  { href: "/profile", label: "Profile", icon: ProfileRingIcon },
+  { href: "/settings", label: "Settings", icon: CogIcon },
 ];
+
+// The selected row, in both navs: pale blue fill, blue rule, blue label.
+export const NAV_ACTIVE = "bg-duo-blue/10 border-duo-blue/40 text-duo-blue";
 
 const SIDEBAR_ITEMS = NAV_ITEMS.filter((item) => item.href !== "/settings");
 
@@ -41,11 +48,11 @@ export function Sidebar() {
 
   return (
     <aside className="hidden md:flex md:w-64 lg:w-72 flex-col border-r border-duo-swan h-screen sticky top-0 px-4 py-6 shrink-0">
-      <div className="px-3 mb-8">
-        <span className="text-3xl font-black text-duo-green tracking-tight">lingo</span>
-      </div>
+      <Link href="/" className="px-3 mb-8" aria-label="Lingo home">
+        <Logo />
+      </Link>
       <nav className="flex flex-col gap-1">
-        {SIDEBAR_ITEMS.map(({ href, label, icon: Icon, color, bg }) => {
+        {SIDEBAR_ITEMS.map(({ href, label, icon: Icon }) => {
           const active = pathname === href;
           return (
             <Link
@@ -53,10 +60,10 @@ export function Sidebar() {
               href={href}
               className={clsx(
                 "flex items-center gap-4 px-4 py-3 rounded-2xl font-bold text-sm uppercase tracking-wide border-2 border-transparent transition-colors",
-                active ? `${bg} ${color}` : "text-duo-eel hover:bg-duo-snow"
+                active ? NAV_ACTIVE : "text-duo-eel hover:bg-duo-snow"
               )}
             >
-              <Icon size={26} strokeWidth={active ? 2.5 : 2} className={color} />
+              <Icon size={26} />
               {label}
             </Link>
           );
@@ -68,10 +75,12 @@ export function Sidebar() {
             onBlur={() => setTimeout(() => setMoreOpen(false), 150)}
             className={clsx(
               "w-full flex items-center gap-4 px-4 py-3 rounded-2xl font-bold text-sm uppercase tracking-wide border-2 border-transparent transition-colors",
-              moreActive ? "bg-duo-swan/50 text-duo-wolf" : "text-duo-eel hover:bg-duo-snow"
+              moreActive ? NAV_ACTIVE : "text-duo-eel hover:bg-duo-snow"
             )}
           >
-            <MoreHorizontal size={26} strokeWidth={moreActive ? 2.5 : 2} className="text-duo-wolf" />
+            <span className="w-[26px] h-[26px] rounded-full bg-duo-purple flex items-center justify-center shrink-0">
+              <MoreHorizontal size={16} strokeWidth={3} className="text-white" />
+            </span>
             More
           </button>
 
@@ -90,7 +99,7 @@ function MoreMenu({ pathname }: { pathname: string }) {
       <MoreLink href="#" icon={GraduationCap} label="Lingo English Test" />
       <MoreLink href="#" icon={School} label="Schools" />
       <div className="my-1 border-t border-duo-swan" />
-      <MoreLink href="/settings" icon={Settings} label="Settings" active={pathname === "/settings"} />
+      <MoreLink href="/settings" icon={CogIcon} label="Settings" active={pathname === "/settings"} />
       <MoreLink href="#" icon={HelpCircle} label="Help" />
       <MoreLink href="#" icon={LogOut} label="Log Out" />
     </div>
@@ -118,7 +127,7 @@ function MoreLink({ href, icon: Icon, label, active }: { href: string; icon: any
 function PromoWidget() {
   return (
     <div className="mt-auto border border-duo-swan rounded-2xl p-4 text-center">
-      <p className="text-3xl mb-1">🃏</p>
+      <DuoOwl size={52} className="mx-auto mb-1" />
       <p className="font-extrabold text-sm text-duo-eel leading-snug mb-1">Want to learn faster?</p>
       <p className="text-xs text-duo-wolf mb-3">Lingo makes it easy!</p>
       <button className="w-full border-2 border-duo-blue text-duo-blue font-extrabold text-xs uppercase tracking-wide rounded-2xl py-2 cursor-default">

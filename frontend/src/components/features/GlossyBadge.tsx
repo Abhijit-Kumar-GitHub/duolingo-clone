@@ -45,7 +45,7 @@ const SIZE_MAP = {
 // the box (not stretched to fill it), so flattening the badge doesn't
 // squash the icon.
 export function GlossyBadge({
-  color, size = "md", icon: Icon, iconClassName, className, muted, iconSize: iconSizeOverride, strokeWidth = 2.2, pressable = false,
+  color, size = "md", icon: Icon, iconClassName, className, muted, iconSize: iconSizeOverride, strokeWidth = 2.2, pressable = false, iconProps,
 }: {
   color: GlossyColor;
   size?: "sm" | "md" | "lg" | "xl";
@@ -55,6 +55,12 @@ export function GlossyBadge({
   muted?: boolean;
   iconSize?: number;
   strokeWidth?: number;
+  // Extra props forwarded verbatim to the icon component. Only meaningful
+  // for the multi-tone SVGs in art/icons.tsx (which take `muted`, `tier`,
+  // …); deliberately opt-in rather than always-on, because lucide spreads
+  // whatever it's given straight onto the <svg> element and would turn an
+  // unknown prop into a React DOM warning.
+  iconProps?: Record<string, unknown>;
   // Real Duolingo's path nodes react to hover by sinking the top face
   // toward the rim (like the button is already being pressed), not with a
   // tooltip or a lift. Only meaningful on clickable nodes.
@@ -88,7 +94,12 @@ export function GlossyBadge({
           transform: pressable && hovered ? `translateY(${pressOffset}px)` : undefined,
         }}
       >
-        <Icon className={clsx(muted ? "text-duo-hare" : "text-white", iconClassName)} size={iconSizeOverride ?? iconSize} strokeWidth={strokeWidth} />
+        <Icon
+          className={clsx(muted ? "text-duo-hare" : "text-white", iconClassName)}
+          size={iconSizeOverride ?? iconSize}
+          strokeWidth={strokeWidth}
+          {...iconProps}
+        />
       </div>
     </div>
   );

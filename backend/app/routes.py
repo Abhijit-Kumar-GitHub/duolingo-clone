@@ -94,7 +94,14 @@ def open_checkpoint(unit_id: int, user: models.User = Depends(current_user), db:
 def read_lesson(skill_id: int, user: models.User = Depends(current_user), db: Session = Depends(get_db)):
     progress = crud.get_or_create_progress(db, user.id, skill_id)
     if progress.status == "locked":
-        raise HTTPException(403, "Skill is locked")
+        raise HTTPException(403, {"code": "skill_locked", "message": "Skill is locked"})
+    # Hearts gate the *entry* to a lesson, not just the middle of one. Without
+    # this, running out of hearts mid-lesson correctly stops you, but backing
+    # out to the path and tapping the node again would happily deal you a
+    # fresh set of exercises on zero hearts. `current_user` has already run
+    # heart regen (crud.get_user), so this reads the true live balance.
+    if user.hearts <= 0:
+        raise HTTPException(403, {"code": "no_hearts", "message": "No hearts remaining"})
     lesson = crud.get_next_lesson_for_skill(db, skill_id, progress.lessons_completed)
     if lesson is None:
         raise HTTPException(404, "No lessons found for this skill")

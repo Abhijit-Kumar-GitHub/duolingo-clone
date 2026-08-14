@@ -5,6 +5,28 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 const CURRENT_USER_ID = 1;
 
+/**
+ * Thrown for any non-2xx response. Carries the HTTP status and, where the
+ * backend supplied one, a machine-readable `code` — FastAPI's HTTPException
+ * detail can be an object, and routes.py uses that for the cases callers
+ * genuinely need to branch on (a locked skill and an out-of-hearts learner
+ * are both 403, but the UI has to respond to them very differently).
+ * Matching on `code` keeps that branch off the human-facing message string.
+ */
+export class ApiError extends Error {
+  constructor(public status: number, public detail: unknown, message: string) {
+    super(message);
+    this.name = "ApiError";
+  }
+
+  get code(): string | null {
+    if (this.detail && typeof this.detail === "object" && "code" in this.detail) {
+      return String((this.detail as { code: unknown }).code);
+    }
+    return null;
+  }
+}
+
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
     ...options,
@@ -17,7 +39,13 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   });
   if (!res.ok) {
     const body = await res.text();
-    throw new Error(`API ${res.status}: ${body}`);
+    let detail: unknown = body;
+    try {
+      detail = (JSON.parse(body) as { detail?: unknown }).detail ?? body;
+    } catch {
+      // non-JSON error body (proxy/gateway HTML, say) — keep the raw text
+    }
+    throw new ApiError(res.status, detail, `API ${res.status}: ${body}`);
   }
   return res.json();
 }

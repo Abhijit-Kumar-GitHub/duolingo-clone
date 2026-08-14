@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Heart, Infinity as InfinityIcon, Gem } from "lucide-react";
+import { Infinity as InfinityIcon } from "lucide-react";
 import clsx from "clsx";
 import { api } from "@/lib/api";
 import { Popover, PopoverPanel } from "../Popover";
+import { GemIcon, HeartIcon } from "../art/icons";
 
 function formatCountdown(seconds: number | null): string {
   if (seconds === null) return "";
@@ -45,7 +46,7 @@ export function HeartsPopover({ hearts, maxHearts, onChange }: {
     <Popover
       trigger={
         <span className="flex items-center gap-1.5 font-extrabold text-duo-red">
-          <Heart className="fill-duo-red text-duo-red" size={22} />
+          <HeartIcon size={24} muted={hearts === 0} />
           {hearts}
         </span>
       }
@@ -54,7 +55,7 @@ export function HeartsPopover({ hearts, maxHearts, onChange }: {
         <p className="font-extrabold text-duo-eel mb-3">Hearts</p>
         <div className="flex justify-center gap-1.5 mb-3">
           {Array.from({ length: maxHearts }).map((_, i) => (
-            <Heart key={i} size={26} className={i < hearts ? "text-duo-red fill-duo-red" : "text-duo-swan fill-duo-swan"} />
+            <HeartIcon key={i} size={28} muted={i >= hearts} />
           ))}
         </div>
 
@@ -79,10 +80,10 @@ export function HeartsPopover({ hearts, maxHearts, onChange }: {
             className="flex items-center justify-between border border-duo-swan rounded-xl px-4 py-3 hover:bg-duo-snow disabled:opacity-40"
           >
             <span className="flex items-center gap-2 font-bold text-sm text-duo-eel">
-              <Heart size={18} className="text-duo-red fill-duo-red" /> Refill hearts
+              <HeartIcon size={18} /> Refill hearts
             </span>
             <span className="flex items-center gap-1 text-xs font-extrabold text-duo-blue">
-              <Gem size={14} className="fill-duo-blue" /> 350
+              <GemIcon size={14} /> 350
             </span>
           </button>
         </div>

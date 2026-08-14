@@ -1,10 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import {
-  Coffee, UtensilsCrossed, Hand, Table, User, Users, Smile, Globe, Languages,
-  MessageCircle, Star, Gem,
-} from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+import { GemIcon } from "./art/icons";
 import { useRouter } from "next/navigation";
 import { api, Checkpoint, PathResponse, SkillNode, Unit } from "@/lib/api";
 import { PathNode, NodeStatus } from "./PathNode";
@@ -31,23 +29,6 @@ const POPOVER_COLOR: Record<string, GlossyColor> = {
   "duo-blue": "blue",
   "duo-purple": "purple",
   "duo-teal": "teal",
-};
-
-// Each skill's topic icon — only shown on that skill's "current" node (the
-// one you're actually about to play). Every other not-yet-reached node uses
-// a generic star instead, matching real Duolingo (it doesn't reveal what a
-// node is about until you get there).
-const TOPIC_ICONS: Record<string, any> = {
-  coffee: Coffee,
-  utensils: UtensilsCrossed,
-  "hand-wave": Hand,
-  table: Table,
-  user: User,
-  message: MessageCircle,
-  smile: Smile,
-  globe: Globe,
-  languages: Languages,
-  "home-heart": Users,
 };
 
 // One entry = one circular stop on the path. A "lesson" node maps 1:1 to a
@@ -131,6 +112,9 @@ export function PathMap({ path, onRefresh }: { path: PathResponse; onRefresh?: (
   }, [path.units.length]);
 
   const banner = path.units[activeUnit] ?? path.units[0];
+  // The first unit you haven't touched at all — the only one that may offer
+  // a jump-ahead (see the map below).
+  const firstUnstartedIdx = path.units.findIndex((u) => u.skills.every((s) => s.status === "locked"));
 
   return (
     // The tall bottom padding is load-bearing, not cosmetic: without a
@@ -141,10 +125,14 @@ export function PathMap({ path, onRefresh }: { path: PathResponse; onRefresh?: (
       <div className="sticky top-0 z-20 w-full bg-white pt-2 pb-3">
         <div className={`${UNIT_BANNER[banner.color_theme] ?? "bg-duo-green"} rounded-2xl px-5 py-4 text-white shadow-duo-card flex items-center justify-between gap-3`}>
           <div className="min-w-0">
+            {/* The unit label doubles as the way back out to the section
+                list, and carries a back-arrow to say so — same affordance as
+                the real banner. */}
             <button
               onClick={() => router.push("/sections")}
-              className="text-xs font-bold uppercase opacity-90 hover:opacity-100 hover:underline underline-offset-2"
+              className="flex items-center gap-1.5 text-xs font-bold uppercase opacity-90 hover:opacity-100 hover:underline underline-offset-2"
             >
+              <ArrowLeft size={14} strokeWidth={3} />
               {banner.title}
             </button>
             <p className="font-extrabold text-lg truncate">{banner.description}</p>
@@ -153,14 +141,16 @@ export function PathMap({ path, onRefresh }: { path: PathResponse; onRefresh?: (
         </div>
       </div>
 
+      {/* Only the *next* unit offers a jump-ahead, not every locked one —
+          otherwise Units 2 and 3 both show a "Jump here?" bubble at the same
+          time, which the real path never does (you can only test out of the
+          unit you're actually next to). */}
       {path.units.map((unit, unitIdx) => {
         const entries = buildEntries(unit);
         // Each unit's snake curve starts fresh at offset 0 rather than
         // carrying momentum over from the previous unit's ending offset.
         let globalIndex = 0;
-        // A not-yet-started unit (no skill reached at all) gets a single
-        // "Jump here?" checkpoint above its very first node.
-        const unitNotStarted = unit.skills.every((s) => s.status === "locked");
+        const unitNotStarted = unitIdx === firstUnstartedIdx;
         const unitDone = unit.skills.every((s) => s.status === "completed");
         const popColor = POPOVER_COLOR[unit.color_theme] ?? "green";
 
@@ -192,7 +182,6 @@ export function PathMap({ path, onRefresh }: { path: PathResponse; onRefresh?: (
                       key={`${unit.id}-trophy-${i}`}
                       kind="trophy"
                       status={unitDone ? "done" : "locked"}
-                      icon={Star}
                       colorTheme={unit.color_theme}
                       offset={offset}
                       clickable={false}
@@ -209,7 +198,6 @@ export function PathMap({ path, onRefresh }: { path: PathResponse; onRefresh?: (
                       key={`${unit.id}-chest-${i}`}
                       kind="chest"
                       status={chestStatus}
-                      icon={Star}
                       colorTheme={unit.color_theme}
                       offset={offset}
                       clickable={!!cp?.available && !openingChest}
@@ -231,7 +219,6 @@ export function PathMap({ path, onRefresh }: { path: PathResponse; onRefresh?: (
                     key={nodeKey}
                     kind="lesson"
                     status={status}
-                    icon={status === "current" ? (TOPIC_ICONS[skill.icon_name] ?? Star) : Star}
                     colorTheme={unit.color_theme}
                     offset={offset}
                     clickable={clickable}
@@ -263,7 +250,7 @@ export function PathMap({ path, onRefresh }: { path: PathResponse; onRefresh?: (
 
       {reward !== null && (
         <p className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-duo-eel text-white text-sm font-extrabold px-5 py-3 rounded-xl shadow-duo-card animate-pop-in z-50 flex items-center gap-2">
-          <Gem size={18} className="text-duo-blue" /> +{reward} gems!
+          <GemIcon size={18} /> +{reward} gems!
         </p>
       )}
     </div>

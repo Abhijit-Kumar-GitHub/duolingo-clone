@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Flame, Lock } from "lucide-react";
+import { Lock } from "lucide-react";
 import clsx from "clsx";
 import { api, DayActivity } from "@/lib/api";
 import { Popover, PopoverPanel } from "../Popover";
+import { FlameIcon } from "../art/icons";
 
 export function StreakPopover({ streak }: { streak: number }) {
   const [days, setDays] = useState<DayActivity[] | null>(null);
@@ -16,8 +17,8 @@ export function StreakPopover({ streak }: { streak: number }) {
   return (
     <Popover
       trigger={
-        <span className="flex items-center gap-1.5 font-extrabold text-duo-fox">
-          <Flame className={streak > 0 ? "fill-duo-fox text-duo-fox" : "text-duo-hare"} size={22} />
+        <span className={clsx("flex items-center gap-1.5 font-extrabold", streak > 0 ? "text-duo-fox" : "text-duo-hare")}>
+          <FlameIcon size={24} muted={streak === 0} />
           {streak}
         </span>
       }
@@ -35,12 +36,12 @@ export function StreakPopover({ streak }: { streak: number }) {
                 <span className="text-[10px] font-bold text-duo-wolf">{d?.day_label ?? "-"}</span>
                 <div
                   className={clsx(
-                    "w-8 h-8 rounded-full flex items-center justify-center",
-                    d?.active ? "bg-duo-fox" : "bg-white border-2 border-duo-swan",
-                    d?.is_today && !d?.active && "border-duo-fox"
+                    "w-8 h-8 rounded-full flex items-center justify-center border-2",
+                    d?.active ? "bg-white border-duo-fox" : "bg-duo-snow border-transparent",
+                    d?.is_today && "ring-2 ring-duo-fox ring-offset-1"
                   )}
                 >
-                  {d?.active && <Flame size={14} className="text-white fill-white" />}
+                  <FlameIcon size={16} muted={!d?.active} />
                 </div>
               </div>
             ))}
