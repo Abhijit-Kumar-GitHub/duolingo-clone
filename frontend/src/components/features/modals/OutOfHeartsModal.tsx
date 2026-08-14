@@ -18,7 +18,7 @@ export function OutOfHeartsModal({ onRefill }: { onRefill: () => void }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-white/95 backdrop-blur-sm z-50 flex items-center justify-center px-4">
+    <div className="fixed inset-0 bg-duo-bg/95 backdrop-blur-sm z-50 flex items-center justify-center px-4">
       <div className="max-w-sm w-full text-center flex flex-col items-center gap-4 animate-pop-in">
         <BrokenHeartIcon size={84} />
         <h2 className="text-2xl font-extrabold text-duo-eel">You ran out of hearts!</h2>

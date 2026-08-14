@@ -19,7 +19,7 @@ export function GuidebookButton() {
         <BookOpen size={14} /> Guidebook
       </button>
       {open && (
-        <div className="absolute top-full mt-2 right-0 bg-duo-eel text-white text-xs font-bold px-3 py-2 rounded-lg whitespace-nowrap z-20 animate-pop-in">
+        <div className="absolute top-full mt-2 right-0 bg-duo-inverse text-white text-xs font-bold px-3 py-2 rounded-lg whitespace-nowrap z-20 animate-pop-in">
           Guidebook coming soon
         </div>
       )}

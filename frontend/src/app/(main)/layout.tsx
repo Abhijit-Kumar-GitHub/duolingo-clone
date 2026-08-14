@@ -14,7 +14,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   }, [fetchUser]);
 
   return (
-    <div className="flex min-h-screen bg-white">
+    <div className="flex min-h-screen bg-duo-bg">
       <Sidebar />
       <div className="flex-1 flex flex-col">
         <StatsBar />

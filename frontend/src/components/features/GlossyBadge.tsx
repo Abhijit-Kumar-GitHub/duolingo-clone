@@ -17,7 +17,15 @@ const COLOR_MAP: Record<GlossyColor, { face: string; rimTop: string; rimBottom: 
   purple: { face: "#CE82FF", rimTop: "#A568C9", rimBottom: "#8A54A8" },
   teal: { face: "#00CD9C", rimTop: "#00A87E", rimBottom: "#008A68" },
   fox: { face: "#FF9600", rimTop: "#CC7A00", rimBottom: "#A66200" },
-  grey: { face: "#E5E5E5", rimTop: "#CFCFCF", rimBottom: "#B8B8B8" },
+  // The locked/muted coin is the one ramp that has to follow the theme: in
+  // the dark it must be *lighter* than the page, not darker, or the node
+  // vanishes into the background. Pulled from CSS vars (globals.css) since
+  // these end up in inline gradients, out of Tailwind's reach.
+  grey: {
+    face: "var(--duo-node-face)",
+    rimTop: "var(--duo-node-rim-top)",
+    rimBottom: "var(--duo-node-rim-bottom)",
+  },
 };
 
 // faceW/faceH are the literal box dimensions of the top face (and the rim

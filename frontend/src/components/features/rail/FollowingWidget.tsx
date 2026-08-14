@@ -29,7 +29,7 @@ export function FollowingWidget() {
               key={t}
               onClick={() => setTab(t)}
               className={`flex-1 text-xs font-extrabold uppercase tracking-wide py-1.5 rounded-lg transition-colors ${
-                tab === t ? "bg-white text-duo-eel shadow-duo-card" : "text-duo-hare"
+                tab === t ? "bg-duo-card text-duo-eel shadow-duo-card" : "text-duo-hare"
               }`}
             >
               {t}

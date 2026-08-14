@@ -31,7 +31,7 @@ export function TranslateWordBank({ exercise, disabled, onSelect }: {
           <button
             key={position}
             onClick={() => remove(position)}
-            className="px-4 py-2 rounded-xl border-2 border-duo-swan font-bold text-duo-eel bg-white"
+            className="px-4 py-2 rounded-xl border-2 border-duo-swan font-bold text-duo-eel bg-duo-card"
           >
             {bank[idx]}
           </button>
@@ -45,7 +45,7 @@ export function TranslateWordBank({ exercise, disabled, onSelect }: {
             key={idx}
             disabled={used.includes(idx) || disabled}
             onClick={() => pick(idx)}
-            className="px-4 py-2 rounded-xl border-2 border-duo-swan font-bold text-duo-eel bg-white disabled:opacity-0 disabled:pointer-events-none transition-opacity hover:bg-duo-snow"
+            className="px-4 py-2 rounded-xl border-2 border-duo-swan font-bold text-duo-eel bg-duo-card disabled:opacity-0 disabled:pointer-events-none transition-opacity hover:bg-duo-snow"
           >
             {word}
           </button>

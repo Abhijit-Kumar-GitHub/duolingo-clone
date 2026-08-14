@@ -57,7 +57,7 @@ export default function SectionsPage() {
         <div className="bg-duo-blue/10 border border-duo-blue/20 rounded-2xl p-5">
           <p className="text-xs font-extrabold uppercase tracking-wide text-duo-blue mb-1">A1 · In progress</p>
           <h2 className="text-2xl font-extrabold text-duo-eel mb-3">Section 1</h2>
-          <div className="h-3 bg-white rounded-full overflow-hidden mb-1">
+          <div className="h-3 bg-duo-card rounded-full overflow-hidden mb-1">
             <div className="h-full bg-duo-blue rounded-full transition-all" style={{ width: `${pct}%` }} />
           </div>
           <p className="text-xs font-bold text-duo-wolf mb-4">{pct}% complete</p>
@@ -66,7 +66,7 @@ export default function SectionsPage() {
 
         {FUTURE_SECTIONS.map((section) => (
           <div key={section.name} className="bg-duo-snow border border-duo-swan rounded-2xl p-5 flex items-center gap-4">
-            <div className="w-11 h-11 rounded-full bg-white border border-duo-swan flex items-center justify-center shrink-0">
+            <div className="w-11 h-11 rounded-full bg-duo-card border border-duo-swan flex items-center justify-center shrink-0">
               <Lock size={18} className="text-duo-hare" />
             </div>
             <div className="flex-1">
@@ -84,7 +84,7 @@ export default function SectionsPage() {
       </div>
 
       {notice && (
-        <p className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-duo-eel text-white text-sm font-bold px-4 py-2.5 rounded-xl shadow-duo-card animate-pop-in z-30">
+        <p className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-duo-inverse text-white text-sm font-bold px-4 py-2.5 rounded-xl shadow-duo-card animate-pop-in z-30">
           {notice}
         </p>
       )}

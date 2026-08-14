@@ -20,7 +20,7 @@ export function MonthlyChallengeCard() {
       </p>
       <Link
         href="/"
-        className="block text-center bg-white border-2 border-duo-swan text-duo-blue font-extrabold text-xs uppercase tracking-wide rounded-2xl py-2.5"
+        className="block text-center bg-duo-card border-2 border-duo-swan text-duo-blue font-extrabold text-xs uppercase tracking-wide rounded-2xl py-2.5"
       >
         Start a Lesson
       </Link>

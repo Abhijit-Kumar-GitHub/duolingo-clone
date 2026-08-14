@@ -33,7 +33,18 @@ export type ArtIconProps = {
 // The grey ramp every icon falls back to when `muted` — deliberately the
 // same greys GlossyBadge uses for a locked node, so a locked chest and the
 // disc it sits next to desaturate to matching tones.
-const GREY = { light: "#E5E5E5", mid: "#CFCFCF", base: "#BDBDBD", dark: "#A3A3A3", darkest: "#8A8A8A" };
+//
+// These are CSS variables rather than literals because the ramp has to
+// *invert* in dark mode: a muted icon needs to be lighter than the page
+// there, not darker. Custom properties resolve inside SVG presentation
+// attributes, so a `fill` can reference one directly.
+const GREY = {
+  light: "var(--duo-muted-1)",
+  mid: "var(--duo-muted-2)",
+  base: "var(--duo-muted-3)",
+  dark: "var(--duo-muted-4)",
+  darkest: "var(--duo-muted-5)",
+};
 
 function Svg({ size = 24, className, box = 24, children }: {
   size?: number; className?: string; box?: number; children: React.ReactNode;

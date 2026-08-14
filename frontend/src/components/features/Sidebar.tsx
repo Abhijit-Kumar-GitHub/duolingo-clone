@@ -7,6 +7,7 @@ import { GraduationCap, School, HelpCircle, LogOut, MoreHorizontal } from "lucid
 import clsx from "clsx";
 import { Logo } from "./art/Logo";
 import { DuoOwl } from "./art/DuoOwl";
+import { ThemeToggle } from "./ThemeToggle";
 import {
   BirdhouseIcon, CogIcon, DumbbellIcon, ProfileRingIcon, QuestChestIcon,
   ShieldIcon, StorefrontIcon,
@@ -95,10 +96,11 @@ export function Sidebar() {
 
 function MoreMenu({ pathname }: { pathname: string }) {
   return (
-    <div className="absolute left-full ml-2 bottom-0 w-56 bg-white border border-duo-swan rounded-2xl shadow-xl py-2 z-30 animate-pop-in">
+    <div className="absolute left-full ml-2 bottom-0 w-60 bg-duo-card border border-duo-swan rounded-2xl shadow-xl py-2 z-30 animate-pop-in">
       <MoreLink href="#" icon={GraduationCap} label="Lingo English Test" />
       <MoreLink href="#" icon={School} label="Schools" />
       <div className="my-1 border-t border-duo-swan" />
+      <ThemeToggle />
       <MoreLink href="/settings" icon={CogIcon} label="Settings" active={pathname === "/settings"} />
       <MoreLink href="#" icon={HelpCircle} label="Help" />
       <MoreLink href="#" icon={LogOut} label="Log Out" />

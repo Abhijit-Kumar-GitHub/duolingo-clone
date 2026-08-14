@@ -2,14 +2,22 @@ import type { Config } from "tailwindcss";
 
 // Centralized Duolingo design tokens. Every screen pulls colors from here —
 // never hardcode a hex in a component.
+// Themed tokens resolve through a CSS variable so light/dark is one class on
+// <html> rather than a `dark:` variant on every element (see globals.css).
+// The `<alpha-value>` placeholder is what keeps opacity modifiers working:
+// `bg-duo-snow/60` compiles to `rgb(var(--duo-snow) / 0.6)`.
+const themed = (name: string) => `rgb(var(--${name}) / <alpha-value>)`;
+
 const config: Config = {
   content: ["./src/**/*.{js,ts,jsx,tsx,mdx}"],
+  darkMode: "class",
   theme: {
     extend: {
       colors: {
+        // Brand — identical in both themes. Duolingo's palette is the
+        // product's identity; it doesn't dim in the dark.
         "duo-green": "#58CC02",
         "duo-green-dark": "#58A700",
-        "duo-blue": "#1CB0F6",
         "duo-blue-dark": "#1899D6",
         "duo-red": "#FF4B4B",
         "duo-red-dark": "#EA2B2B",
@@ -20,16 +28,22 @@ const config: Config = {
         "duo-teal": "#00CD9C",
         "duo-teal-dark": "#00A87E",
         "duo-fox": "#FF9600",
-        "duo-eel": "#4B4B4B",
-        "duo-wolf": "#777777",
-        "duo-hare": "#AFAFAF",
-        "duo-swan": "#E5E5E5",
-        "duo-snow": "#F7F7F7",
         // Super (the subscription upsell) is the one surface that doesn't use
         // the learning palette — it has its own indigo CTA and a
         // green→blue→violet brand gradient.
         "duo-indigo": "#4B4BFF",
         "duo-indigo-dark": "#3A3AD1",
+
+        // Themed — the neutral ramp, which is what actually flips.
+        "duo-bg": themed("duo-bg"),           // page background
+        "duo-card": themed("duo-card"),       // cards, panels, popovers
+        "duo-snow": themed("duo-snow"),       // subtle fill / hover
+        "duo-swan": themed("duo-swan"),       // borders + dividers
+        "duo-eel": themed("duo-eel"),         // primary text
+        "duo-wolf": themed("duo-wolf"),       // secondary text
+        "duo-hare": themed("duo-hare"),       // muted / disabled
+        "duo-blue": themed("duo-blue"),       // links + selection
+        "duo-inverse": themed("duo-inverse"), // toasts + tooltips
       },
       fontFamily: {
         sans: ["var(--font-nunito)", "system-ui", "sans-serif"],
@@ -44,8 +58,8 @@ const config: Config = {
         "duo-teal": "0 4px 0 #00A87E",
         "duo-fox": "0 4px 0 #CC7A00",
         "duo-indigo": "0 4px 0 #3A3AD1",
-        "duo-gray": "0 4px 0 #E5E5E5",
-        "duo-card": "0 2px 0 #E5E5E5",
+        "duo-gray": "0 4px 0 rgb(var(--duo-swan))",
+        "duo-card": "0 2px 0 rgb(var(--duo-swan))",
       },
       borderRadius: {
         "duo": "16px",

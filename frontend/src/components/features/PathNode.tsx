@@ -92,9 +92,9 @@ export function PathNode({
       style={{ transform: `translateX(${offset}px)`, zIndex: popover ? 40 : undefined }}
     >
       {status === "current" && kind === "lesson" && !popover && (
-        <div className="absolute -top-11 left-1/2 -translate-x-1/2 bg-white border-2 border-duo-swan text-duo-green font-extrabold text-xs uppercase tracking-wide px-4 py-1.5 rounded-xl shadow-duo-card animate-bounce-in whitespace-nowrap">
+        <div className="absolute -top-11 left-1/2 -translate-x-1/2 bg-duo-card border-2 border-duo-swan text-duo-green font-extrabold text-xs uppercase tracking-wide px-4 py-1.5 rounded-xl shadow-duo-card animate-bounce-in whitespace-nowrap">
           Start
-          <div className="absolute left-1/2 -translate-x-1/2 -bottom-[7px] w-3 h-3 bg-white border-r-2 border-b-2 border-duo-swan rotate-45" />
+          <div className="absolute left-1/2 -translate-x-1/2 -bottom-[7px] w-3 h-3 bg-duo-card border-r-2 border-b-2 border-duo-swan rotate-45" />
         </div>
       )}
       {showJump && <JumpAheadBubble color={color} />}
@@ -121,13 +121,16 @@ export function PathNode({
               style={{
                 left: -7, right: -7, top: -7, height: 42 + 14,
                 borderRadius: "50%",
-                background: `conic-gradient(${RING_COLOR[color]} ${ringPct * 360}deg, #E5E5E5 ${ringPct * 360}deg)`,
+                background: `conic-gradient(${RING_COLOR[color]} ${ringPct * 360}deg, rgb(var(--duo-swan)) ${ringPct * 360}deg)`,
                 WebkitMask: "radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 4px))",
                 mask: "radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 4px))",
               }}
             />
           ) : (
-            <span className="absolute inset-x-0 top-0 h-[42px] ring-4 ring-offset-2 ring-duo-green/30 pointer-events-none" style={{ borderRadius: "50%" }} />
+            // ring-offset needs the page colour named explicitly — Tailwind's
+            // default offset is hard-white, which shows as a bright halo in
+            // dark mode.
+            <span className="absolute inset-x-0 top-0 h-[42px] ring-4 ring-offset-2 ring-offset-duo-bg ring-duo-green/30 pointer-events-none" style={{ borderRadius: "50%" }} />
           )
         )}
 

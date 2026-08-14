@@ -48,7 +48,7 @@ export function Popover({ trigger, children, align = "right" }: {
 
 export function PopoverPanel({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`bg-white border border-duo-swan rounded-2xl shadow-xl w-80 p-5 ${className}`}>
+    <div className={`bg-duo-card border border-duo-swan rounded-2xl shadow-xl w-80 p-5 ${className}`}>
       {children}
     </div>
   );

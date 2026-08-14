@@ -27,14 +27,14 @@ export function JumpAheadBubble({ color = "green" }: { color?: string }) {
         onClick={() => setOpen((o) => !o)}
         onBlur={() => setOpen(false)}
         className={clsx(
-          "flex items-center gap-1.5 bg-white border-2 font-extrabold text-xs uppercase tracking-wide px-3 py-1.5 rounded-xl shadow-duo-card whitespace-nowrap",
+          "flex items-center gap-1.5 bg-duo-card border-2 font-extrabold text-xs uppercase tracking-wide px-3 py-1.5 rounded-xl shadow-duo-card whitespace-nowrap",
           colorClasses
         )}
       >
         <SkipForward size={12} /> Jump here?
       </button>
       {open && (
-        <div className="absolute top-full mt-1 left-1/2 -translate-x-1/2 bg-duo-eel text-white text-xs font-bold px-3 py-1.5 rounded-lg whitespace-nowrap z-20 animate-pop-in">
+        <div className="absolute top-full mt-1 left-1/2 -translate-x-1/2 bg-duo-inverse text-white text-xs font-bold px-3 py-1.5 rounded-lg whitespace-nowrap z-20 animate-pop-in">
           Skip-ahead placement test coming soon
         </div>
       )}

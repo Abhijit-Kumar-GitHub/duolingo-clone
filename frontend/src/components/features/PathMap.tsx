@@ -122,7 +122,7 @@ export function PathMap({ path, onRefresh }: { path: PathResponse; onRefresh?: (
     // never scroll its top past the sticky banner's line, so the final unit's
     // banner (colour and all) would be unreachable.
     <div className="flex flex-col items-center pb-[60vh] max-w-md mx-auto">
-      <div className="sticky top-0 z-20 w-full bg-white pt-2 pb-3">
+      <div className="sticky top-0 z-20 w-full bg-duo-bg pt-2 pb-3">
         <div className={`${UNIT_BANNER[banner.color_theme] ?? "bg-duo-green"} rounded-2xl px-5 py-4 text-white shadow-duo-card flex items-center justify-between gap-3`}>
           <div className="min-w-0">
             {/* The unit label doubles as the way back out to the section
@@ -249,7 +249,7 @@ export function PathMap({ path, onRefresh }: { path: PathResponse; onRefresh?: (
       })}
 
       {reward !== null && (
-        <p className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-duo-eel text-white text-sm font-extrabold px-5 py-3 rounded-xl shadow-duo-card animate-pop-in z-50 flex items-center gap-2">
+        <p className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-duo-inverse text-white text-sm font-extrabold px-5 py-3 rounded-xl shadow-duo-card animate-pop-in z-50 flex items-center gap-2">
           <GemIcon size={18} /> +{reward} gems!
         </p>
       )}

@@ -2,9 +2,75 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+  Theming.
+
+  Brand colours (green, blue-as-an-object, red, yellow, purple, teal, fox)
+  are the same in both themes — Duolingo's palette is the product's identity
+  and doesn't dim in the dark. What flips is the *neutral* ramp: page,
+  surface, border, and the three text greys. Those are declared here as
+  space-separated RGB channels so Tailwind can compose them with opacity
+  modifiers (`bg-duo-snow/60`, `border-duo-blue/40`), which is why they're
+  `19 31 36` rather than `#131F24`.
+
+  Because every component already styles itself with those tokens rather
+  than raw greys, adding `.dark` to <html> re-themes the whole app without
+  touching component markup — see store/useThemeStore.ts.
+
+  A second set of vars below carries full colour values (not channels) for
+  the handful of places that need a colour inside an inline style or an SVG
+  fill, where Tailwind classes can't reach: the path-node coin and the
+  muted/locked variants of the hand-drawn icons.
+*/
+
+:root {
+  --duo-bg: 255 255 255;      /* page */
+  --duo-card: 255 255 255;    /* elevated surface: cards, panels, popovers */
+  --duo-snow: 247 247 247;    /* subtle fill / hover */
+  --duo-swan: 229 229 229;    /* borders + dividers */
+  --duo-eel: 75 75 75;        /* primary text */
+  --duo-wolf: 119 119 119;    /* secondary text */
+  --duo-hare: 175 175 175;    /* muted text / disabled */
+  --duo-blue: 28 176 246;     /* links + selection; brightens in the dark */
+  --duo-inverse: 75 75 75;    /* toasts + tooltips — always reversed out */
+
+  /* full-value twins, for inline styles and SVG fills */
+  --duo-node-face: #e5e5e5;
+  --duo-node-rim-top: #cfcfcf;
+  --duo-node-rim-bottom: #b8b8b8;
+  --duo-muted-1: #e5e5e5;
+  --duo-muted-2: #cfcfcf;
+  --duo-muted-3: #bdbdbd;
+  --duo-muted-4: #a3a3a3;
+  --duo-muted-5: #8a8a8a;
+}
+
+.dark {
+  --duo-bg: 19 31 36;
+  --duo-card: 32 47 54;
+  --duo-snow: 38 52 59;
+  --duo-swan: 55 70 79;
+  --duo-eel: 241 247 251;
+  --duo-wolf: 143 163 173;
+  --duo-hare: 82 101 109;
+  --duo-blue: 73 192 248;
+  --duo-inverse: 55 70 79;
+
+  /* Muted greys invert direction in the dark: a locked node has to be
+     *lighter* than the page, not darker, or it disappears into it. */
+  --duo-node-face: #37464f;
+  --duo-node-rim-top: #2c3940;
+  --duo-node-rim-bottom: #223037;
+  --duo-muted-1: #3a4b54;
+  --duo-muted-2: #44565f;
+  --duo-muted-3: #4e626c;
+  --duo-muted-4: #5a707b;
+  --duo-muted-5: #66808c;
+}
+
 html, body {
-  background-color: #ffffff;
-  color: #4B4B4B;
+  background-color: rgb(var(--duo-bg));
+  color: rgb(var(--duo-eel));
 }
 
 @layer components {
@@ -30,4 +96,4 @@ html, body {
 }
 
 ::-webkit-scrollbar { height: 8px; width: 8px; }
-::-webkit-scrollbar-thumb { background: #E5E5E5; border-radius: 8px; }
+::-webkit-scrollbar-thumb { background: rgb(var(--duo-swan)); border-radius: 8px; }

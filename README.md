@@ -55,9 +55,9 @@ is mocked.
 | Achievements / badges system | **Done** — 6 achievements, lazily evaluated, shown on `/profile` |
 | Real functioning leaderboard across seeded users | **Done** — real weekly XP sums, not a static list |
 | Responsive design (mobile / tablet / desktop) | **Done** — `MobileNav.tsx` bottom tab bar below `md`, right rail drops on narrow widths, no horizontal overflow at 390px |
+| Dark mode | **Done** — full theme, toggled from the sidebar's More menu or `/settings`, remembered across reloads, defaults to the OS preference |
 | Timed practice / "legendary" challenge mode | **Partial** — practice replay at half XP works; Legendary is a Super feature and shows a Coming Soon note |
 | Audio for exercises (TTS or seeded audio) | Not done |
-| Dark mode | Not done |
 
 ## Project structure
 
@@ -88,7 +88,8 @@ duolingo-clone/
 │       │   │   └── settings/       # placeholder
 │       │   ├── lesson/[skillId]/   # full-screen lesson player (no sidebar)
 │       │   ├── icon.svg            # favicon (App Router picks this up automatically)
-│       │   └── layout.tsx          # root layout, font
+│       │   ├── globals.css         # theme tokens (light/dark CSS variables)
+│       │   └── layout.tsx          # root layout, font, pre-paint theme script
 │       ├── components/features/
 │       │   ├── Sidebar.tsx, MobileNav.tsx, StatsBar.tsx, Popover.tsx
 │       │   ├── popovers/           # CoursePopover, StreakPopover, GemsPopover, HeartsPopover
@@ -99,7 +100,8 @@ duolingo-clone/
 │       │   ├── LessonPlayer.tsx, FeedbackBar.tsx, ComingSoon.tsx
 │       │   ├── exercises/          # MultipleChoice, TranslateWordBank, MatchPairs, FillBlank, TypeAnswer
 │       │   └── modals/             # OutOfHeartsModal, LessonCompleteModal
-│       ├── store/                  # useUserStore, useLessonStore (Zustand)
+│       │   ├── ThemeToggle.tsx, ThemeInit.tsx
+│       ├── store/                  # useUserStore, useLessonStore, useThemeStore (Zustand)
 │       └── lib/api.ts              # typed fetch client + ApiError
 └── README.md
 ```
@@ -194,6 +196,25 @@ which the backend compares case-insensitively against `correct_answer`.
 Adding a 6th exercise type means: one new payload shape in `seed.py`, one new
 React component, one new entry in `LessonPlayer.tsx`'s type map — nothing
 else changes.
+
+**Theming:** light/dark is one class on `<html>`, not a `dark:` variant on
+every element. The neutral ramp (page, surface, border, and the three text
+greys) is declared in `globals.css` as CSS custom properties holding RGB
+*channels* — `19 31 36`, not `#131F24` — which is what lets Tailwind keep
+composing them with opacity modifiers (`bg-duo-snow/60` → `rgb(var(--duo-snow) / 0.6)`).
+Because every component already styles itself with those tokens instead of
+raw greys, the whole app re-themes with no component changes. Brand colours
+don't flip: Duolingo's palette is the product's identity and stays put.
+
+Two details worth calling out. First, the muted ramp *inverts* direction —
+a locked path node has to be lighter than the page in dark mode, not darker,
+or it disappears — so the coin and the greyed-out icon fills read from their
+own set of variables. Those reach inline gradients and SVG `fill` attributes,
+where Tailwind classes can't go. Second, the theme is applied by a small
+inline script in `layout.tsx` that runs before first paint; doing it in a
+React effect would mean one painted frame of white on every load for a
+dark-mode user. `useThemeStore` only reconciles React state with the class
+that's already on the DOM.
 
 **Artwork (`components/features/art/`):** every game asset — the mascot,
 streak flame, gem, heart, XP bolt, crown, treasure chest, trophy, league
@@ -376,5 +397,5 @@ panel lives in `components/features/popovers/`:
   colour derived from the username (`art/Avatar.tsx`), because an emoji is a
   different picture on every OS. The column is kept as the natural place for
   a real avatar field to live.
-- Audio, real speech recognition, dark mode, and Super/IAP are "Coming Soon"
+- Audio, real speech recognition, and Super/IAP are "Coming Soon"
   placeholders per the assignment's allowed-mocks list.

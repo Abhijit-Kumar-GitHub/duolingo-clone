@@ -37,8 +37,8 @@ export function StreakPopover({ streak }: { streak: number }) {
                 <div
                   className={clsx(
                     "w-8 h-8 rounded-full flex items-center justify-center border-2",
-                    d?.active ? "bg-white border-duo-fox" : "bg-duo-snow border-transparent",
-                    d?.is_today && "ring-2 ring-duo-fox ring-offset-1"
+                    d?.active ? "bg-duo-card border-duo-fox" : "bg-duo-snow border-transparent",
+                    d?.is_today && "ring-2 ring-duo-fox ring-offset-1 ring-offset-duo-card"
                   )}
                 >
                   <FlameIcon size={16} muted={!d?.active} />

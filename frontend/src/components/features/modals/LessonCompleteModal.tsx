@@ -32,7 +32,7 @@ export function LessonCompleteModal({ result }: { result: LessonCompleteResult }
   }, []);
 
   return (
-    <div className="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center px-4">
+    <div className="fixed inset-0 bg-duo-bg z-50 flex flex-col items-center justify-center px-4">
       {size.width > 0 && <Confetti width={size.width} height={size.height} numberOfPieces={220} recycle={false} />}
 
       <div className="text-center flex flex-col items-center gap-2 animate-pop-in max-w-sm w-full">
@@ -67,7 +67,7 @@ function StatChip({ icon: Icon, color, label, value }: {
   return (
     <div className={clsx("rounded-2xl p-[2px] pt-0", c.shell)}>
       <p className="text-[11px] font-extrabold uppercase tracking-wide text-white py-1.5">{label}</p>
-      <div className="bg-white rounded-[14px] flex items-center justify-center gap-1.5 py-2.5">
+      <div className="bg-duo-card rounded-[14px] flex items-center justify-center gap-1.5 py-2.5">
         <Icon size={20} />
         <span className={clsx("font-extrabold text-lg leading-none", c.value)}>{value}</span>
       </div>

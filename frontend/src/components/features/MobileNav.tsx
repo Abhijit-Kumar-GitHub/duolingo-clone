@@ -13,7 +13,7 @@ export function MobileNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="md:hidden fixed bottom-0 inset-x-0 z-30 flex items-stretch bg-white border-t-2 border-duo-swan h-16 pb-[env(safe-area-inset-bottom)]">
+    <nav className="md:hidden fixed bottom-0 inset-x-0 z-30 flex items-stretch bg-duo-bg border-t-2 border-duo-swan h-16 pb-[env(safe-area-inset-bottom)]">
       {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
         const active = pathname === href;
         return (
