@@ -3,17 +3,18 @@
 import { useState } from "react";
 import { Check, Plus } from "lucide-react";
 import { Popover, PopoverPanel } from "../Popover";
+import { FlagIcon, FlagCode } from "../FlagIcon";
 
-const CURRENT_COURSE = { flag: "🇪🇸", name: "Spanish" };
+const CURRENT_COURSE = { flag: "es" as FlagCode, name: "Spanish" };
 
 // These aren't backed by real seeded content — clicking one shows a "coming
 // soon" message, per the assignment's "one seeded language is enough /
 // multiple languages can be a placeholder" allowance.
-const AVAILABLE_COURSES = [
-  { flag: "🇫🇷", name: "French" },
-  { flag: "🇩🇪", name: "German" },
-  { flag: "🇯🇵", name: "Japanese" },
-  { flag: "🇮🇹", name: "Italian" },
+const AVAILABLE_COURSES: { flag: FlagCode; name: string }[] = [
+  { flag: "fr", name: "French" },
+  { flag: "de", name: "German" },
+  { flag: "jp", name: "Japanese" },
+  { flag: "it", name: "Italian" },
 ];
 
 export function CoursePopover({ level }: { level: number }) {
@@ -30,7 +31,7 @@ export function CoursePopover({ level }: { level: number }) {
       align="left"
       trigger={
         <span className="flex items-center gap-1.5 font-extrabold text-duo-eel">
-          <span className="text-xl leading-none">{CURRENT_COURSE.flag}</span>
+          <FlagIcon code={CURRENT_COURSE.flag} size={22} />
           {level}
         </span>
       }
@@ -43,7 +44,7 @@ export function CoursePopover({ level }: { level: number }) {
         {!adding ? (
           <>
             <div className="flex items-center gap-3 px-3 py-2 rounded-xl bg-duo-blue/10">
-              <span className="text-2xl">{CURRENT_COURSE.flag}</span>
+              <FlagIcon code={CURRENT_COURSE.flag} size={28} />
               <span className="flex-1 font-bold text-duo-blue">{CURRENT_COURSE.name}</span>
               <Check size={18} className="text-duo-blue" />
             </div>
@@ -62,7 +63,7 @@ export function CoursePopover({ level }: { level: number }) {
                 onClick={() => pickComingSoon(c.name)}
                 className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-duo-snow text-left"
               >
-                <span className="text-2xl">{c.flag}</span>
+                <FlagIcon code={c.flag} size={28} />
                 <span className="font-bold text-duo-eel">{c.name}</span>
               </button>
             ))}
