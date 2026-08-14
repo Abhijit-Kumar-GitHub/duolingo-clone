@@ -19,6 +19,46 @@ mechanics (XP, streaks, hearts, crowns, leaderboard, achievements).
 > inactivity — the **first** request after a cold start can take ~30–50s
 > before the path loads. Subsequent requests are immediate.
 
+## Feature checklist
+
+Every "must have" from the brief, and where it lives. Nothing in this table
+is mocked.
+
+| # | Requirement | Where it's implemented |
+|---|---|---|
+| 1 | Visual path/tree of units and skills, lock/unlock progression | `PathMap.tsx` + `PathNode.tsx`, driven by `GET /api/path` |
+| 1 | Completed vs available vs locked states | `user_skill_progress.status`, unlocked in `crud.complete_lesson` |
+| 1 | Progress rings / crowns per skill | conic-gradient ring in `PathNode.tsx`; `user_skill_progress.crowns` |
+| 1 | Top bar: streak, XP, hearts, mocked gems | `StatsBar.tsx` + the four panels in `popovers/` |
+| 2 | 5 exercise types (MC, word-bank translate, match pairs, fill blank, type answer) | `components/features/exercises/`, one component each |
+| 2 | Immediate correct/incorrect feedback bar | `FeedbackBar.tsx`, graded by `POST /api/lesson/check-answer` |
+| 2 | Progress bar across the lesson | `LessonPlayer.tsx` |
+| 2 | Lose a heart on a wrong answer; failure handled | `crud.lose_heart`; `OutOfHeartsModal.tsx` mid-lesson **and** on entry |
+| 2 | Award XP + mark skill progress on completion | `POST /api/lesson/complete` → `crud.complete_lesson` |
+| 3 | Streak that increments on daily activity (testable) | `daily_activity` + `crud._apply_streak_decay`; `POST /api/user/simulate-day` to demo it |
+| 3 | XP totals + leaderboard | `GET /api/leaderboard`, real weekly sums across 7 seeded users |
+| 3 | Heart regeneration over time / mocked refill | 30-min regen in `crud._apply_heart_regen`; `POST /api/hearts/refill` |
+| 3 | Daily goal / XP goal indicator | `users.daily_xp_goal` vs `crud.get_xp_today` → `DailyQuestsWidget.tsx`, `/quests` |
+| 3 | All progress persists per user | SQLite; every mutation is committed, nothing lives only in client state |
+| 4 | Course content stored in DB and seeded | `seed.py` → `units`/`skills`/`lessons`/`exercises` |
+| 4 | Learner profile page with stats + achievements | `/profile` ← `GET /api/profile` |
+| 5 | Playful gamified UI with mascot-style flourishes | `components/features/art/` (see Artwork below) |
+| 5 | Animated feedback in the lesson player | feedback bar slide-in, shake on a wrong match, `animate-pop-in`/`bounce-in` |
+| 5 | Modals, toasts, celebratory states | `LessonCompleteModal` (confetti), `OutOfHeartsModal`, the chest's `+N gems!` toast |
+| 5 | Path navigation + progress visuals | sticky per-unit banner, unit dividers, jump-ahead, node popups, `/sections` |
+| 5 | Settings placeholder | `/settings` |
+
+## Bonus items
+
+| Bonus | Status |
+|---|---|
+| Achievements / badges system | **Done** — 6 achievements, lazily evaluated, shown on `/profile` |
+| Real functioning leaderboard across seeded users | **Done** — real weekly XP sums, not a static list |
+| Responsive design (mobile / tablet / desktop) | **Done** — `MobileNav.tsx` bottom tab bar below `md`, right rail drops on narrow widths, no horizontal overflow at 390px |
+| Timed practice / "legendary" challenge mode | **Partial** — practice replay at half XP works; Legendary is a Super feature and shows a Coming Soon note |
+| Audio for exercises (TTS or seeded audio) | Not done |
+| Dark mode | Not done |
+
 ## Project structure
 
 ```
@@ -93,6 +133,36 @@ npm run dev
 
 Runs on `http://localhost:3000`.
 
+## Deployment
+
+**Backend → Render** (web service, root directory `backend`):
+
+| Setting | Value |
+|---|---|
+| Build command | `pip install -r requirements.txt` |
+| Start command | `uvicorn app.main:app --host 0.0.0.0 --port $PORT` (also in `Procfile`) |
+| `PYTHON_VERSION` | `3.11.9` |
+| `CORS_ORIGINS` | the Vercel URL, comma-separated |
+
+`PYTHON_VERSION` is not optional. Render **ignores `runtime.txt`** (it's
+deprecated there, though the file is kept for Heroku-style platforms that
+still read it), so without the env var the service builds on Python 3.14 —
+for which `pydantic-core` ships no wheel, so pip falls back to compiling it
+from Rust and the build fails on a read-only cargo cache. The error surfaces
+as a maturin failure with no obvious link to the Python version.
+
+`CORS_ORIGINS` is read in `main.py` and defaults to `*`, so the first deploy
+works before the frontend URL exists; set it once Vercel has assigned one.
+
+**Frontend → Vercel** (root directory `frontend`): set
+`NEXT_PUBLIC_API_URL` to the Render service URL. No other configuration.
+
+On Render's free tier the SQLite file lives on ephemeral disk, so the
+database is recreated and reseeded whenever the instance restarts. That's
+deliberate for a demo — the seeded learner is always in a known good state —
+but it does mean progress made on the live link isn't permanent. Locally the
+file persists normally.
+
 ## Architecture overview
 
 **Auth is intentionally mocked**, per the assignment spec ("assume a default
@@ -137,7 +207,8 @@ emoji or an icon library:
 2. **Lucide is a monochrome *line* set.** Duolingo's economy icons are solid
    multi-tone shapes with a lit face and a shaded underside. A grey outlined
    gem next to a glossy green path node reads as two different apps. Lucide
-   is still used, correctly, for nav and chrome.
+   is still used, correctly, for genuine UI controls — the lesson close
+   button, chevrons, arrows, locks, the checkmark on a finished node.
 3. **Inline SVG can't 404**, needs no image request, and scales to any size —
    so the deployed build looks identical to local with no asset pipeline.
 
@@ -300,5 +371,10 @@ panel lives in `components/features/popovers/`:
   waiting on real timers.
 - Leagues have a full tier ladder in the UI but no weekly promotion/demotion
   job — the learner is always in Bronze.
+- `users.avatar_emoji` is still stored and returned by the API, but the UI no
+  longer renders it: avatars are drawn from the display name's initial on a
+  colour derived from the username (`art/Avatar.tsx`), because an emoji is a
+  different picture on every OS. The column is kept as the natural place for
+  a real avatar field to live.
 - Audio, real speech recognition, dark mode, and Super/IAP are "Coming Soon"
   placeholders per the assignment's allowed-mocks list.
